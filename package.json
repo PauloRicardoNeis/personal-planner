@@ -1,0 +1,20 @@
+{
+  "name": "planner-app",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build:web": "pnpm --filter web build",
+    "dev:server": "cargo run --manifest-path apps/server-rust/Cargo.toml",
+    "build:server-bin": "cargo build --release --manifest-path apps/server-rust/Cargo.toml",
+    "copy:server-bin": "cp apps/server-rust/target/release/planner-server.exe apps/desktop/src-tauri/binaries/planner-server-x86_64-pc-windows-msvc.exe",
+    "build:desktop-with-server": "pnpm build:server-bin && pnpm copy:server-bin && pnpm --filter web build:desktop && pnpm --filter desktop build:with-server",
+    "build:desktop-no-server": "pnpm --filter web build:desktop && pnpm --filter desktop build:no-server"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

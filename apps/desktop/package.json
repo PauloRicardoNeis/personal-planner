@@ -1,0 +1,14 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build:with-server": "tauri build --config src-tauri/tauri.conf.with-server.json",
+    "build:no-server":   "tauri build",
+    "dev:with-server":   "tauri dev --config src-tauri/tauri.conf.with-server.json",
+    "dev:no-server":     "tauri dev"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
