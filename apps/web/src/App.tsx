@@ -5,10 +5,12 @@ import { DeveresPage } from './pages/DeveresPage.js';
 import { NutritionPage } from './pages/NutritionPage.js';
 import { FoodsPage } from './pages/FoodsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
+import { UpdateBanner } from './components/UpdateBanner.js';
 
 export function App() {
   return (
     <BrowserRouter>
+      <UpdateBanner />
       <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 600, margin: '0 auto', padding: '0 16px' }}>
         <nav style={{ display: 'flex', gap: 16, padding: '16px 0', borderBottom: '1px solid var(--border-nav)', marginBottom: 24, flexWrap: 'wrap' }}>
           <NavLink to="/" end style={navStyle}>Hoje</NavLink>

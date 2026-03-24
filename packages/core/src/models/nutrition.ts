@@ -29,6 +29,14 @@ export interface NutrientsPer100g {
   zinc?: number;
   omega3?: number;
   cholesterol?: number;
+  // Commonly deficient micronutrients
+  folate?: number;       // μg (B9)
+  vitaminB6?: number;   // mg
+  vitaminE?: number;    // mg
+  vitaminK?: number;    // μg
+  iodine?: number;      // μg
+  selenium?: number;    // μg
+  choline?: number;     // mg
 }
 
 export const NutrientsPer100gSchema = z.object({
@@ -52,6 +60,13 @@ export const NutrientsPer100gSchema = z.object({
   zinc: z.number().optional(),
   omega3: z.number().optional(),
   cholesterol: z.number().optional(),
+  folate: z.number().optional(),
+  vitaminB6: z.number().optional(),
+  vitaminE: z.number().optional(),
+  vitaminK: z.number().optional(),
+  iodine: z.number().optional(),
+  selenium: z.number().optional(),
+  choline: z.number().optional(),
 });
 
 // ── Food ─────────────────────────────────────────────────────────────────────
@@ -176,6 +191,13 @@ export interface DailyTargets {
   zinc?: number;
   omega3?: number;
   cholesterol?: number;
+  folate?: number;
+  vitaminB6?: number;
+  vitaminE?: number;
+  vitaminK?: number;
+  iodine?: number;
+  selenium?: number;
+  choline?: number;
 }
 
 export const NutritionProfileSchema = z.object({
@@ -201,6 +223,13 @@ export const NutritionProfileSchema = z.object({
     zinc: z.number().optional(),
     omega3: z.number().optional(),
     cholesterol: z.number().optional(),
+    folate: z.number().optional(),
+    vitaminB6: z.number().optional(),
+    vitaminE: z.number().optional(),
+    vitaminK: z.number().optional(),
+    iodine: z.number().optional(),
+    selenium: z.number().optional(),
+    choline: z.number().optional(),
   }).optional(),
 });
 

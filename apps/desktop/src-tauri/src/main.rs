@@ -2,15 +2,42 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_shell::ShellExt;
 
 /// Holds the sidecar child handle so we can kill it on window close.
 struct SidecarHandle(Mutex<Option<tauri_plugin_shell::process::CommandChild>>);
 
+/// Re-checks for updates and installs if one is available.
+/// Called from the frontend when the user clicks "Install update".
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    if let Some(update) = updater.check().await.map_err(|e| e.to_string())? {
+        update
+            .download_and_install(|_, _| {}, || {})
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+async fn check_for_updates(app: tauri::AppHandle) {
+    use tauri_plugin_updater::UpdaterExt;
+    let Ok(updater) = app.updater() else { return };
+    let Ok(Some(update)) = updater.check().await else { return };
+    let _ = app.emit(
+        "update-available",
+        serde_json::json!({ "version": update.version, "notes": update.body }),
+    );
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![install_update])
         .setup(|app| {
             // Pass the OS user-data directory to the server so SQLite is stored
             // in a stable, writable location (e.g. %APPDATA%\planner-app\).
@@ -37,6 +64,12 @@ fn main() {
                     app.manage(SidecarHandle(Mutex::new(None)));
                 }
             }
+
+            // Check for updates silently in background; emits "update-available" to frontend.
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                check_for_updates(handle).await;
+            });
 
             Ok(())
         })

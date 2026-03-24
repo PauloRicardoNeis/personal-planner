@@ -34,6 +34,13 @@ export function FoodsPage() {
   const [zinc, setZinc] = useState('');
   const [omega3, setOmega3] = useState('');
   const [cholesterol, setCholesterol] = useState('');
+  const [folate, setFolate] = useState('');
+  const [vitaminB6, setVitaminB6] = useState('');
+  const [vitaminE, setVitaminE] = useState('');
+  const [vitaminK, setVitaminK] = useState('');
+  const [iodine, setIodine] = useState('');
+  const [selenium, setSelenium] = useState('');
+  const [choline, setCholine] = useState('');
 
   // Search
   const [search, setSearch] = useState('');
@@ -47,6 +54,8 @@ export function FoodsPage() {
     setSaturatedFat(''); setTransFat(''); setSugar(''); setSodium(''); setPotassium('');
     setCalcium(''); setIron(''); setVitaminA(''); setVitaminC(''); setVitaminD('');
     setVitaminB12(''); setMagnesium(''); setZinc(''); setOmega3(''); setCholesterol('');
+    setFolate(''); setVitaminB6(''); setVitaminE(''); setVitaminK('');
+    setIodine(''); setSelenium(''); setCholine('');
     setShowOptional(false);
   }
 
@@ -80,6 +89,13 @@ export function FoodsPage() {
       ...(zinc && { zinc: Number(zinc) }),
       ...(omega3 && { omega3: Number(omega3) }),
       ...(cholesterol && { cholesterol: Number(cholesterol) }),
+      ...(folate && { folate: Number(folate) }),
+      ...(vitaminB6 && { vitaminB6: Number(vitaminB6) }),
+      ...(vitaminE && { vitaminE: Number(vitaminE) }),
+      ...(vitaminK && { vitaminK: Number(vitaminK) }),
+      ...(iodine && { iodine: Number(iodine) }),
+      ...(selenium && { selenium: Number(selenium) }),
+      ...(choline && { choline: Number(choline) }),
     };
 
     await createFood({
@@ -144,6 +160,13 @@ export function FoodsPage() {
             <input type="number" placeholder="Zinco (mg)" value={zinc} onChange={(e) => setZinc(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Omega 3 (g)" value={omega3} onChange={(e) => setOmega3(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Colesterol (mg)" value={cholesterol} onChange={(e) => setCholesterol(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Folato (mcg)" value={folate} onChange={(e) => setFolate(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Vit. B6 (mg)" value={vitaminB6} onChange={(e) => setVitaminB6(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Vit. E (mg)" value={vitaminE} onChange={(e) => setVitaminE(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
+            <input type="number" placeholder="Vit. K (mcg)" value={vitaminK} onChange={(e) => setVitaminK(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
+            <input type="number" placeholder="Iodo (mcg)" value={iodine} onChange={(e) => setIodine(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
+            <input type="number" placeholder="Selenio (mcg)" value={selenium} onChange={(e) => setSelenium(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Colina (mg)" value={choline} onChange={(e) => setCholine(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
           </div>
         )}
 
@@ -237,6 +260,13 @@ function NutrientTable({ nutrients }: { nutrients: NutrientsPer100g }) {
     { label: 'Zinco', value: nutrients.zinc, unit: 'mg' },
     { label: 'Omega 3', value: nutrients.omega3, unit: 'g' },
     { label: 'Colesterol', value: nutrients.cholesterol, unit: 'mg' },
+    { label: 'Folato (B9)', value: nutrients.folate, unit: 'mcg' },
+    { label: 'Vitamina B6', value: nutrients.vitaminB6, unit: 'mg' },
+    { label: 'Vitamina E', value: nutrients.vitaminE, unit: 'mg' },
+    { label: 'Vitamina K', value: nutrients.vitaminK, unit: 'mcg' },
+    { label: 'Iodo', value: nutrients.iodine, unit: 'mcg' },
+    { label: 'Selenio', value: nutrients.selenium, unit: 'mcg' },
+    { label: 'Colina', value: nutrients.choline, unit: 'mg' },
   ];
 
   return (

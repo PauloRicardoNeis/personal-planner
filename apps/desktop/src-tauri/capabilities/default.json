@@ -6,6 +6,7 @@
     "core:default",
     "shell:allow-execute",
     "shell:allow-kill",
-    "shell:allow-stdin-write"
+    "shell:allow-stdin-write",
+    "updater:default"
   ]
 }

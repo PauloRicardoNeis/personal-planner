@@ -13,6 +13,8 @@ const DAILY_TARGETS_KEYS: (keyof DailyTargets)[] = [
   'saturatedFat', 'sugar', 'sodium', 'potassium', 'calcium',
   'iron', 'vitaminA', 'vitaminC', 'vitaminD', 'vitaminB12',
   'magnesium', 'zinc', 'omega3', 'cholesterol',
+  'folate', 'vitaminB6', 'vitaminE', 'vitaminK',
+  'iodine', 'selenium', 'choline',
 ];
 
 // ── computePortionNutrients ──────────────────────────────────────────────────
@@ -137,6 +139,13 @@ export function computeDailyTargets(profile: NutritionProfile): DailyTargets {
     zinc: 11,
     omega3: 1.6,
     cholesterol: 300,
+    folate: 400,      // μg
+    vitaminB6: 1.3,   // mg
+    vitaminE: 15,     // mg
+    vitaminK: 120,    // μg
+    iodine: 150,      // μg
+    selenium: 55,     // μg
+    choline: 500,     // mg
   };
 
   // Apply custom overrides
