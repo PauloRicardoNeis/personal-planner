@@ -29,11 +29,19 @@ export function HojePage() {
   }
 
   if (state.status === 'loading') {
-    return <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>;
+    return (
+      <div style={{ padding: '40px 48px' }}>
+        <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>
+      </div>
+    );
   }
 
   if (state.status === 'error') {
-    return <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>;
+    return (
+      <div style={{ padding: '40px 48px' }}>
+        <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>
+      </div>
+    );
   }
 
   const { snapshot } = state;
@@ -42,22 +50,24 @@ export function HojePage() {
   const deveresPending = snapshot.deveres.filter((d) => !d.isDone).length;
   const ns = snapshot.nutritionSummary;
 
-  // ── Summary cards ────────────────────────────────────────────────────────
-  // To add a new section: push a new object to this array.
-  const summaryCards: DashboardCardProps[] = [
+  // ── Summary cards ─────────────────────────────────────────────────────────
+  const summaryCards: (DashboardCardProps & { icon: string })[] = [
     {
+      icon: '🌿',
       label: 'Hábitos',
-      value: `${habitsDone} / ${habitsTotal}`,
+      value: habitsTotal > 0 ? `${habitsDone} / ${habitsTotal}` : 'Nenhum',
       ...(habitsTotal > 0 ? { progress: habitsDone / habitsTotal } : {}),
       link: '/habitos',
     },
     {
+      icon: '📌',
       label: 'Deveres',
-      value: deveresPending === 0 ? 'Em dia' : `${deveresPending} pendente${deveresPending > 1 ? 's' : ''}`,
+      value: deveresPending === 0 ? 'Em dia ✓' : `${deveresPending} pendente${deveresPending > 1 ? 's' : ''}`,
       link: '/deveres',
     },
     ...(ns
       ? [{
+          icon: '🔥',
           label: 'Calorias',
           value: ns.caloriesTarget > 0
             ? `${Math.round(ns.calories)} / ${ns.caloriesTarget} kcal`
@@ -68,65 +78,78 @@ export function HojePage() {
       : []),
   ];
 
-  // ── Quick actions ─────────────────────────────────────────────────────────
-  // To add a new action: push a new object to this array.
+  // ── Quick actions ──────────────────────────────────────────────────────────
   const quickActions = [
-    { label: '+ Hábito', to: '/habitos' },
-    { label: '+ Tarefa', to: '/deveres' },
-    { label: '+ Refeição', to: '/nutricao' },
+    { label: '+ Hábito',  to: '/habitos'  },
+    { label: '+ Tarefa',  to: '/deveres'  },
+    { label: '+ Refeição',to: '/nutricao' },
   ];
 
   return (
-    <div>
-      {/* Dashboard header */}
-      <div style={{ marginBottom: 32 }}>
-        <p style={{ fontWeight: 700, fontSize: 20, margin: '0 0 2px' }}>{greeting()}</p>
-        <p style={{ color: 'var(--text-muted)', margin: '0 0 20px' }}>
+    <div style={{ padding: '40px 48px' }}>
+
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 36 }}>
+        <h1 style={{ fontWeight: 800, fontSize: 32, margin: '0 0 6px', letterSpacing: '-1px', color: 'var(--text)' }}>
+          {greeting()}
+        </h1>
+        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 15 }}>
           {formatDate(snapshot.date)}
         </p>
-
-        <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
-          {summaryCards.map((card) => (
-            <DashboardCard key={card.label} {...card} />
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {quickActions.map((action) => (
-            <button
-              key={action.to}
-              onClick={() => navigate(action.to)}
-              style={{
-                padding: '7px 14px',
-                borderRadius: 8,
-                border: '1px solid var(--border-input)',
-                background: 'var(--bg-input)',
-                color: 'var(--text)',
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 500,
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
       </div>
 
+      {/* ── Summary cards grid ────────────────────────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: 16,
+        marginBottom: 32,
+      }}>
+        {summaryCards.map((card) => (
+          <DashboardCard key={card.label} {...card} />
+        ))}
+      </div>
+
+      {/* ── Quick actions ─────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 40 }}>
+        {quickActions.map((action) => (
+          <button
+            key={action.to}
+            onClick={() => navigate(action.to)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              background: 'var(--bg-card)',
+              color: 'var(--text)',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              boxShadow: 'var(--shadow-card)',
+              transition: 'box-shadow 0.15s',
+            }}
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Detailed view ─────────────────────────────────────────────────── */}
       <HojeView
         snapshot={snapshot}
         onToggleHabit={handleToggleHabit}
         onToggleDever={handleToggleDever}
       />
+
     </div>
   );
 }
 
 function greeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return 'Bom dia';
-  if (h < 18) return 'Boa tarde';
-  return 'Boa noite';
+  if (h < 12) return 'Bom dia 👋';
+  if (h < 18) return 'Boa tarde 👋';
+  return 'Boa noite 👋';
 }
 
 function formatDate(isoDate: string): string {
