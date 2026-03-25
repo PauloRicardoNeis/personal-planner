@@ -56,6 +56,7 @@ jobs:
         with:
           projectPath: apps/desktop
           tauriScript: pnpm tauri
+          updaterJsonPreferNsis: true
           tagName: ${{ github.ref_name }}
           releaseName: Planner ${{ github.ref_name }}
           releaseBody: |
