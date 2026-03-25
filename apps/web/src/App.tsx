@@ -27,7 +27,7 @@ export function App() {
   }, [theme]);
 
   function cycleTheme() {
-    setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]);
+    setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length] as Theme);
   }
 
   return (
