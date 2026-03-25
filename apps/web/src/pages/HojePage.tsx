@@ -48,7 +48,7 @@ export function HojePage() {
     {
       label: 'Hábitos',
       value: `${habitsDone} / ${habitsTotal}`,
-      progress: habitsTotal > 0 ? habitsDone / habitsTotal : undefined,
+      ...(habitsTotal > 0 ? { progress: habitsDone / habitsTotal } : {}),
       link: '/habitos',
     },
     {
@@ -62,7 +62,7 @@ export function HojePage() {
           value: ns.caloriesTarget > 0
             ? `${Math.round(ns.calories)} / ${ns.caloriesTarget} kcal`
             : `${Math.round(ns.calories)} kcal`,
-          progress: ns.caloriesTarget > 0 ? ns.caloriesPercent / 100 : undefined,
+          ...(ns.caloriesTarget > 0 ? { progress: ns.caloriesPercent / 100 } : {}),
           link: '/nutricao',
         }]
       : []),
