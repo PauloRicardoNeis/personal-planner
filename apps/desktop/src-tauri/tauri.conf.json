@@ -1,6 +1,6 @@
 {
   "productName": "Planner",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "identifier": "com.planner-app.desktop",
   "build": {
     "frontendDist": "../../../apps/web/dist",
@@ -22,6 +22,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "externalBin": []
   },
   "plugins": {
