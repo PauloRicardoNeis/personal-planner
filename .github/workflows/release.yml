@@ -47,6 +47,25 @@ jobs:
       - name: Build web (desktop mode)
         run: pnpm --filter web build:desktop
 
+      - name: Verify signing secrets
+        shell: bash
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "ERRO: TAURI_SIGNING_PRIVATE_KEY não está definido"
+            exit 1
+          else
+            echo "TAURI_SIGNING_PRIVATE_KEY está definido (${#KEY} chars)"
+          fi
+          if [ -z "$PASS" ]; then
+            echo "ERRO: TAURI_SIGNING_PRIVATE_KEY_PASSWORD não está definido"
+            exit 1
+          else
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD está definido"
+          fi
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          PASS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
       - name: Build and publish Tauri release
         uses: tauri-apps/tauri-action@v0
         env:
