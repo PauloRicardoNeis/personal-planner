@@ -34,7 +34,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121212;
     --text: #e8e8e8;
     --text-muted: #999;
@@ -68,6 +68,41 @@
     --streak-fire: #fb923c;
     --streak-risk: #facc15;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121212;
+  --text: #e8e8e8;
+  --text-muted: #999;
+  --text-done: #555;
+  --border: #2a2a2a;
+  --border-nav: #2e2e2e;
+  --border-input: #3a3a3a;
+  --bg-check: #1e1e1e;
+  --bg-input: #1e1e1e;
+  --bg-badge: #2a2a2a;
+  --text-badge: #aaa;
+  --nav-active: #f0f0f0;
+  --nav-inactive: #888;
+  --btn-bg: #e8e8e8;
+  --btn-text: #111;
+  --label: #aaa;
+
+  --priority-high-bg: #3a0a0a;
+  --priority-high-text: #ff6b6b;
+  --priority-med-bg: #3a2800;
+  --priority-med-text: #ffb347;
+  --priority-low-bg: #0d1a30;
+  --priority-low-text: #7eb3ff;
+  --overdue-bg: #3a0a0a;
+  --overdue-text: #ff6b6b;
+
+  --progress-bg: #374151;
+  --progress-green: #16a34a;
+  --progress-yellow: #ca8a04;
+  --progress-red: #dc2626;
+  --streak-fire: #fb923c;
+  --streak-risk: #facc15;
 }
 
 *, *::before, *::after {
