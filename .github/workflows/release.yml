@@ -55,6 +55,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
+          packageManager: pnpm
           tagName: ${{ github.ref_name }}
           releaseName: Planner ${{ github.ref_name }}
           releaseBody: |
