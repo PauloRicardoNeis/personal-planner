@@ -6,6 +6,7 @@ import { DeveresPage } from './pages/DeveresPage.js';
 import { NutritionPage } from './pages/NutritionPage.js';
 import { FoodsPage } from './pages/FoodsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
+import { CalendarPage } from './pages/CalendarPage.js';
 import { UpdateBanner } from './components/UpdateBanner.js';
 
 type Theme = 'system' | 'light' | 'dark';
@@ -16,8 +17,9 @@ const THEME_ICONS: Record<Theme, string> = { system: '◑', light: '○', dark: 
 const NAV_ITEMS = [
   { to: '/', label: 'Hoje',      icon: '◎', end: true  },
   { to: '/habitos',  label: 'Hábitos',  icon: '✦', end: false },
-  { to: '/deveres',  label: 'Deveres',  icon: '◻', end: false },
-  { to: '/nutricao', label: 'Nutrição', icon: '◈', end: false },
+  { to: '/deveres',    label: 'Deveres',    icon: '◻', end: false },
+  { to: '/calendario', label: 'Calendário', icon: '▦', end: false },
+  { to: '/nutricao',   label: 'Nutrição',   icon: '◈', end: false },
   { to: '/alimentos',label: 'Alimentos',icon: '◇', end: false },
   { to: '/perfil',   label: 'Perfil',   icon: '◉', end: false },
 ];
@@ -122,8 +124,9 @@ export function App() {
           <Routes>
             <Route path="/" element={<HojePage />} />
             <Route path="/habitos"   element={<PageWrapper><HabitsPage /></PageWrapper>} />
-            <Route path="/deveres"   element={<PageWrapper><DeveresPage /></PageWrapper>} />
-            <Route path="/nutricao"  element={<PageWrapper><NutritionPage /></PageWrapper>} />
+            <Route path="/deveres"    element={<PageWrapper><DeveresPage /></PageWrapper>} />
+            <Route path="/calendario" element={<CalendarPage />} />
+            <Route path="/nutricao"   element={<PageWrapper><NutritionPage /></PageWrapper>} />
             <Route path="/alimentos" element={<PageWrapper><FoodsPage /></PageWrapper>} />
             <Route path="/perfil"    element={<PageWrapper><ProfilePage /></PageWrapper>} />
           </Routes>
