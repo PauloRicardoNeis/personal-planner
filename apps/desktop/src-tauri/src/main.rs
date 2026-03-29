@@ -12,6 +12,14 @@ struct SidecarHandle(Mutex<Option<tauri_plugin_shell::process::CommandChild>>);
 /// Called from the frontend when the user clicks "Install update".
 #[tauri::command]
 async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    // Kill the sidecar before updating so the NSIS installer can overwrite planner-server.exe
+    if let Some(handle) = app.try_state::<SidecarHandle>() {
+        if let Some(child) = handle.0.lock().unwrap().take() {
+            let _ = child.kill();
+            println!("[desktop] sidecar killed before update install");
+        }
+    }
+
     use tauri_plugin_updater::UpdaterExt;
     let updater = app.updater().map_err(|e| e.to_string())?;
     if let Some(update) = updater.check().await.map_err(|e| e.to_string())? {
