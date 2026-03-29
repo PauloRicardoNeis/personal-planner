@@ -163,14 +163,20 @@ export function DeveresPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '10px 20px', borderRadius: 6, border: 'none',
-  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer', fontSize: 14, fontWeight: 600, alignSelf: 'flex-start',
+  padding: '11px 24px', borderRadius: 'var(--radius-md)', border: 'none',
+  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
+  fontSize: 14, fontWeight: 600, alignSelf: 'flex-start',
+  transition: 'background var(--transition), transform var(--transition)',
 };

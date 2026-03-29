@@ -54,11 +54,14 @@ export function HabitsPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  flex: 1, minWidth: 160, padding: '8px 12px', borderRadius: 6,
+  flex: 1, minWidth: 160, padding: '10px 14px', borderRadius: 'var(--radius-md)',
   border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  background: 'var(--bg-input)', color: 'var(--text)',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: 6, border: 'none',
-  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+  padding: '10px 24px', borderRadius: 'var(--radius-md)', border: 'none',
+  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
+  fontSize: 14, fontWeight: 600, transition: 'background var(--transition)',
 };

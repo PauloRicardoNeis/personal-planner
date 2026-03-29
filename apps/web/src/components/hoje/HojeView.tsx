@@ -9,7 +9,7 @@ interface Props {
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-card)',
-  borderRadius: 16,
+  borderRadius: 'var(--radius-xl)',
   padding: '24px',
   boxShadow: 'var(--shadow-card)',
   border: '1px solid var(--border)',
@@ -34,9 +34,18 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
 
   if (!hasContent) {
     return (
-      <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 40 }}>
-        Nada para hoje. Adicione hábitos ou tarefas!
-      </p>
+      <div style={{
+        textAlign: 'center',
+        marginTop: 48,
+        padding: '40px 24px',
+        background: 'var(--bg-card)',
+        borderRadius: 'var(--radius-xl)',
+        border: '1px solid var(--border)',
+      }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 15, margin: 0 }}>
+          Nada para hoje. Adicione hábitos ou tarefas!
+        </p>
+      </div>
     );
   }
 
@@ -69,13 +78,21 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
                       color: isDone ? 'var(--text-done)' : 'var(--text)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 8,
                       flexWrap: 'wrap',
                       flex: 1,
+                      fontWeight: 450,
                     }}>
                       {habit.title}
                       {habit.category && (
-                        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{habit.category}</span>
+                        <span style={{
+                          color: 'var(--text-badge)',
+                          background: 'var(--bg-badge)',
+                          fontSize: 11,
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          fontWeight: 500,
+                        }}>{habit.category}</span>
                       )}
                       {streak.currentStreak > 0 && (
                         <span style={{
@@ -110,18 +127,33 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
                       <span style={{
                         textDecoration: isDone ? 'line-through' : 'none',
                         color: isDone ? 'var(--text-done)' : 'var(--text)',
+                        fontWeight: 450,
                       }}>
                         {dever.title}
                       </span>
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                         <PriorityBadge priority={dever.priority} />
                         {isOverdue && (
-                          <span style={{ fontSize: 11, color: 'var(--overdue-text)', background: 'var(--overdue-bg)', padding: '2px 6px', borderRadius: 4 }}>
+                          <span style={{
+                            fontSize: 11,
+                            color: 'var(--overdue-text)',
+                            background: 'var(--overdue-bg)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm)',
+                            fontWeight: 500,
+                          }}>
                             atrasado
                           </span>
                         )}
                         {dever.area && (
-                          <span style={{ fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '2px 6px', borderRadius: 4 }}>
+                          <span style={{
+                            fontSize: 11,
+                            color: 'var(--text-badge)',
+                            background: 'var(--bg-badge)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm)',
+                            fontWeight: 500,
+                          }}>
                             {dever.area}
                           </span>
                         )}
@@ -139,8 +171,10 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
       {/* ── Nutrition ─────────────────────────────────────────────────────── */}
       {snapshot.nutritionSummary && (
         <section
-          style={{ ...cardStyle, cursor: 'pointer' }}
+          style={{ ...cardStyle, cursor: 'pointer', transition: 'box-shadow var(--transition)' }}
           onClick={() => navigate('/nutricao')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-hover)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card)'; }}
         >
           <h2 style={sectionTitleStyle}>Nutrição</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
@@ -168,17 +202,17 @@ function CompactMacro({ label, current, target, percent, unit }: {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
         <span style={{ fontWeight: 600, color: 'var(--text)' }}>{label}</span>
         <span style={{ color: 'var(--text-muted)' }}>
           {Math.round(current)}{target > 0 ? `/${Math.round(target)}` : ''} {unit}
         </span>
       </div>
-      <div style={{ height: 6, borderRadius: 3, background: 'var(--progress-bg)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${barPercent}%`, borderRadius: 3, background: barColor, transition: 'width 0.3s ease' }} />
+      <div style={{ height: 5, borderRadius: 3, background: 'var(--progress-bg)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${barPercent}%`, borderRadius: 3, background: barColor, transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
       {target > 0 && (
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, textAlign: 'right' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5, textAlign: 'right' }}>
           {percent}%
         </div>
       )}
@@ -195,7 +229,14 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
   const labels = { high: 'alta', medium: 'média', low: 'baixa' };
   const c = vars[priority];
   return (
-    <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '2px 6px', borderRadius: 4, fontWeight: 500 }}>
+    <span style={{
+      fontSize: 11,
+      color: c.text,
+      background: c.bg,
+      padding: '2px 8px',
+      borderRadius: 'var(--radius-sm)',
+      fontWeight: 500,
+    }}>
       {labels[priority]}
     </span>
   );
@@ -205,7 +246,7 @@ const itemStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'flex-start',
   gap: 12,
-  padding: '10px 0',
+  padding: '12px 0',
   borderBottom: '1px solid var(--border)',
 };
 
@@ -214,9 +255,9 @@ function checkStyle(isDone: boolean): React.CSSProperties {
     width: 22,
     height: 22,
     minWidth: 22,
-    borderRadius: 6,
-    border: isDone ? '2px solid #22c55e' : '2px solid var(--border-input)',
-    background: isDone ? '#22c55e' : 'var(--bg-check)',
+    borderRadius: 'var(--radius-sm)',
+    border: isDone ? '2px solid var(--progress-green)' : '2px solid var(--border-input)',
+    background: isDone ? 'var(--progress-green)' : 'var(--bg-check)',
     color: '#fff',
     fontSize: 13,
     fontWeight: 700,
@@ -226,5 +267,6 @@ function checkStyle(isDone: boolean): React.CSSProperties {
     justifyContent: 'center',
     marginTop: 2,
     flexShrink: 0,
+    transition: 'all var(--transition)',
   };
 }

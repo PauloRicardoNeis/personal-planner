@@ -45,11 +45,11 @@ export function App() {
   return (
     <BrowserRouter>
       <UpdateBanner />
-      <div style={{ display: 'flex', height: '100%', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ display: 'flex', height: '100%', fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
 
         {/* ── Sidebar ───────────────────────────────────────────────────── */}
         <aside style={{
-          width: 220,
+          width: 240,
           flexShrink: 0,
           background: 'var(--sidebar-bg)',
           borderRight: '1px solid var(--border)',
@@ -58,17 +58,19 @@ export function App() {
           overflow: 'hidden',
         }}>
           {/* Logo */}
-          <div style={{
-            padding: '24px 20px 20px',
-            borderBottom: '1px solid var(--border)',
-          }}>
-            <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px', color: 'var(--text)' }}>
+          <div style={{ padding: '28px 24px 24px' }}>
+            <span style={{
+              fontWeight: 800,
+              fontSize: 22,
+              letterSpacing: '-0.5px',
+              color: 'var(--accent)',
+            }}>
               Planner
             </span>
           </div>
 
           {/* Nav */}
-          <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+          <nav style={{ flex: 1, padding: '4px 12px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
             {NAV_ITEMS.map(item => (
               <NavLink
                 key={item.to}
@@ -77,43 +79,45 @@ export function App() {
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
-                  padding: '9px 12px',
-                  borderRadius: 8,
+                  gap: 12,
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-md)',
                   textDecoration: 'none',
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
+                  fontWeight: isActive ? 600 : 450,
+                  color: isActive ? 'var(--accent)' : 'var(--nav-inactive)',
                   background: isActive ? 'var(--nav-active-bg)' : 'transparent',
                   fontSize: 14,
-                  transition: 'background 0.15s, color 0.15s',
+                  transition: 'all var(--transition)',
+                  position: 'relative',
                 })}
               >
-                <span style={{ fontSize: 15 }}>{item.icon}</span>
+                <span style={{ fontSize: 16, opacity: 0.9 }}>{item.icon}</span>
                 {item.label}
               </NavLink>
             ))}
           </nav>
 
           {/* Theme toggle */}
-          <div style={{ padding: '16px 14px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ padding: '16px 16px 20px' }}>
             <button
               onClick={cycleTheme}
               style={{
                 width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '8px 12px',
-                borderRadius: 8,
+                gap: 10,
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-input)',
                 background: 'var(--bg-input)',
                 color: 'var(--text-muted)',
                 cursor: 'pointer',
                 fontSize: 13,
                 fontWeight: 500,
+                transition: 'all var(--transition)',
               }}
             >
-              <span>{THEME_ICONS[theme]}</span>
+              <span style={{ fontSize: 14 }}>{THEME_ICONS[theme]}</span>
               {THEME_LABELS[theme]}
             </button>
           </div>
@@ -139,7 +143,7 @@ export function App() {
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ padding: '40px 48px', maxWidth: 900 }}>
+    <div style={{ padding: '40px 48px', maxWidth: 960 }}>
       {children}
     </div>
   );

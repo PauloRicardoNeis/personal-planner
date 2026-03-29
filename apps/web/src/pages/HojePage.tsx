@@ -86,14 +86,20 @@ export function HojePage() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px' }}>
+    <div style={{ padding: '40px 48px', maxWidth: 1000 }}>
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 36 }}>
-        <h1 style={{ fontWeight: 800, fontSize: 32, margin: '0 0 6px', letterSpacing: '-1px', color: 'var(--text)' }}>
+      <div style={{ marginBottom: 40 }}>
+        <h1 style={{
+          fontWeight: 800,
+          fontSize: 34,
+          margin: '0 0 8px',
+          letterSpacing: '-1px',
+          color: 'var(--text)',
+        }}>
           {greeting()}
         </h1>
-        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 15 }}>
+        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 15, fontWeight: 450 }}>
           {formatDate(snapshot.date)}
         </p>
       </div>
@@ -101,9 +107,9 @@ export function HojePage() {
       {/* ── Summary cards grid ────────────────────────────────────────────── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
         gap: 16,
-        marginBottom: 32,
+        marginBottom: 36,
       }}>
         {summaryCards.map((card) => (
           <DashboardCard key={card.label} {...card} />
@@ -111,14 +117,22 @@ export function HojePage() {
       </div>
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 40 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 44 }}>
         {quickActions.map((action) => (
           <button
             key={action.to}
             onClick={() => navigate(action.to)}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--accent)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--text)';
+            }}
             style={{
-              padding: '8px 16px',
-              borderRadius: 8,
+              padding: '9px 18px',
+              borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border)',
               background: 'var(--bg-card)',
               color: 'var(--text)',
@@ -126,7 +140,7 @@ export function HojePage() {
               fontSize: 13,
               fontWeight: 500,
               boxShadow: 'var(--shadow-card)',
-              transition: 'box-shadow 0.15s',
+              transition: 'all var(--transition)',
             }}
           >
             {action.label}
