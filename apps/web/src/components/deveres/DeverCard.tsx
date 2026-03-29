@@ -11,11 +11,11 @@ export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props)
   const today = todayISODate();
   const isDoneToday = dever.completions.some((c) => c.occurrenceDate === today);
 
-  const occurrenceDate: ISODate = dever.type === 'once' ? dever.deadline : today;
+  const occurrenceDate: ISODate = dever.type === 'once' ? dever.fim : today;
 
   const recurrenceLabel =
     dever.type === 'once'
-      ? `prazo: ${dever.deadline}`
+      ? `prazo: ${dever.fim}`
       : formatRecurrence(dever.recurrence);
 
   return (

@@ -25,13 +25,17 @@ export interface DeverBase {
   priority: 'low' | 'medium' | 'high';
   active: boolean;
   createdAt: ISODateTime;
+  /** When the dever enters its active window. Defaults to createdAt if not provided. */
+  inicio: ISODateTime;
+  /** End date of the active window (date only). If absent, no expiry (cyclic). */
+  fim?: ISODate;
   completions: DeverCompletion[];
 }
 
 export interface OnceDever extends DeverBase {
   type: 'once';
-  /** Required for once deveres — TypeScript enforces this via the union */
-  deadline: ISODate;
+  /** Required for once deveres — the deadline date */
+  fim: ISODate;
 }
 
 export interface CyclicDever extends DeverBase {
@@ -46,7 +50,8 @@ export type DeverInput =
   | {
       type: 'once';
       title: string;
-      deadline: ISODate;
+      fim: ISODate;
+      inicio?: ISODateTime;
       area?: string;
       priority: 'low' | 'medium' | 'high';
     }
@@ -54,6 +59,8 @@ export type DeverInput =
       type: 'cyclic';
       title: string;
       recurrence: RecurrenceConfig;
+      inicio?: ISODateTime;
+      fim?: ISODate;
       area?: string;
       priority: 'low' | 'medium' | 'high';
     };
@@ -73,12 +80,17 @@ const DeverBaseSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']),
   active: z.boolean(),
   createdAt: ISODateTimeSchema,
+  // inicio optional in schema to handle legacy data (migration in adapter)
+  inicio: ISODateTimeSchema.optional(),
+  // fim and legacy deadline both date-only; fim takes precedence
+  fim: ISODateSchema.optional(),
+  // Legacy field — kept in schema so old data parses; adapter migrates to fim
+  deadline: ISODateSchema.optional(),
   completions: z.array(DeverCompletionSchema),
 });
 
 export const OnceDeverSchema = DeverBaseSchema.extend({
   type: z.literal('once'),
-  deadline: ISODateSchema,
 });
 
 export const CyclicDeverSchema = DeverBaseSchema.extend({

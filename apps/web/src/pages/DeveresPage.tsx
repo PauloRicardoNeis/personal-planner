@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { todayISODate, type RecurrenceConfig, type WeekdayName, type ISODate } from '@planner/core';
+import { type RecurrenceConfig, type WeekdayName, type ISODate, type ISODateTime } from '@planner/core';
 import { useDeveres } from '../hooks/useDeveres.js';
 import { DeverList } from '../components/deveres/DeverList.js';
 
@@ -23,7 +23,8 @@ export function DeveresPage() {
   const [area, setArea] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [type, setType] = useState<FormType>('once');
-  const [deadline, setDeadline] = useState(todayISODate());
+  const [inicio, setInicio] = useState('');
+  const [fim, setFim] = useState('');
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
   const [weekdays, setWeekdays] = useState<WeekdayName[]>([]);
   const [monthDay, setMonthDay] = useState(1);
@@ -34,9 +35,12 @@ export function DeveresPage() {
 
     const areaVal = area.trim();
     const areaOpt = areaVal ? { area: areaVal } : {};
+    const inicioOpt = inicio ? { inicio: inicio as ISODateTime } : {};
+    const fimOpt = fim ? { fim: fim as ISODate } : {};
 
     if (type === 'once') {
-      await createDever({ type: 'once', title: title.trim(), deadline: deadline as ISODate, ...areaOpt, priority });
+      if (!fim) { alert('Informe o fim (prazo) do dever.'); return; }
+      await createDever({ type: 'once', title: title.trim(), fim: fim as ISODate, ...inicioOpt, ...areaOpt, priority });
     } else {
       let recurrence: RecurrenceConfig;
       if (recurrenceType === 'daily') {
@@ -47,11 +51,13 @@ export function DeveresPage() {
       } else {
         recurrence = { type: 'monthly', monthDay };
       }
-      await createDever({ type: 'cyclic', title: title.trim(), recurrence, ...areaOpt, priority });
+      await createDever({ type: 'cyclic', title: title.trim(), recurrence, ...inicioOpt, ...fimOpt, ...areaOpt, priority });
     }
 
     setTitle('');
     setArea('');
+    setInicio('');
+    setFim('');
   }
 
   function toggleWeekday(day: WeekdayName) {
@@ -82,13 +88,25 @@ export function DeveresPage() {
           </select>
         </div>
 
-        {/* Conditional fields */}
-        {type === 'once' && (
+        {/* Início / Fim */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
-            <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Prazo:</label>
-            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value as ISODate)} required style={inputStyle} />
+            <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Início:</label>
+            <input type="datetime-local" value={inicio} onChange={(e) => setInicio(e.target.value)} style={inputStyle} />
           </div>
-        )}
+          {type === 'once' && (
+            <div>
+              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (prazo):</label>
+              <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} required style={inputStyle} />
+            </div>
+          )}
+          {type === 'cyclic' && (
+            <div>
+              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (opcional):</label>
+              <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
+            </div>
+          )}
+        </div>
 
         {type === 'cyclic' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

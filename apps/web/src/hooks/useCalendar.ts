@@ -46,7 +46,7 @@ export function useCalendar(deveres: Dever[]) {
         const matching = deveres.flatMap((dever) => {
           const occurs =
             dever.type === 'once'
-              ? dever.deadline === date
+              ? dever.fim === date
               : isOccurrenceOn(dever.recurrence, date);
           if (!occurs) return [];
           const isDone = dever.completions.some((c) => c.occurrenceDate === date);

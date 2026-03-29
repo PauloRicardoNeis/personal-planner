@@ -48,6 +48,74 @@ export function FoodsPage() {
   // Expanded food
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // JSON import
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  async function handleJsonImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImportStatus('Importando...');
+    try {
+      const text = await file.text();
+      const raw: unknown = JSON.parse(text);
+      const items = Array.isArray(raw) ? raw : [raw];
+      let ok = 0;
+      let fail = 0;
+      for (const item of items) {
+        if (typeof item !== 'object' || item === null) { fail++; continue; }
+        const obj = item as Record<string, unknown>;
+        const n = obj['nutrients'] as Record<string, unknown> | undefined;
+        if (typeof obj['name'] !== 'string' || !n) { fail++; continue; }
+        try {
+          await createFood({
+            name: (obj['name'] as string).trim(),
+            ...(typeof obj['brand'] === 'string' && obj['brand'] && { brand: obj['brand'] }),
+            ...(typeof obj['category'] === 'string' && obj['category'] && { category: obj['category'] }),
+            ...(typeof obj['servingDescription'] === 'string' && obj['servingDescription'] && { servingDescription: obj['servingDescription'] }),
+            ...(typeof obj['servingGrams'] === 'number' && { servingGrams: obj['servingGrams'] }),
+            nutrients: {
+              calories: Number(n['calories'] ?? 0),
+              protein: Number(n['protein'] ?? 0),
+              carbs: Number(n['carbs'] ?? 0),
+              fat: Number(n['fat'] ?? 0),
+              fiber: Number(n['fiber'] ?? 0),
+              ...(n['saturatedFat'] != null && { saturatedFat: Number(n['saturatedFat']) }),
+              ...(n['transFat'] != null && { transFat: Number(n['transFat']) }),
+              ...(n['sugar'] != null && { sugar: Number(n['sugar']) }),
+              ...(n['sodium'] != null && { sodium: Number(n['sodium']) }),
+              ...(n['potassium'] != null && { potassium: Number(n['potassium']) }),
+              ...(n['calcium'] != null && { calcium: Number(n['calcium']) }),
+              ...(n['iron'] != null && { iron: Number(n['iron']) }),
+              ...(n['vitaminA'] != null && { vitaminA: Number(n['vitaminA']) }),
+              ...(n['vitaminC'] != null && { vitaminC: Number(n['vitaminC']) }),
+              ...(n['vitaminD'] != null && { vitaminD: Number(n['vitaminD']) }),
+              ...(n['vitaminB12'] != null && { vitaminB12: Number(n['vitaminB12']) }),
+              ...(n['magnesium'] != null && { magnesium: Number(n['magnesium']) }),
+              ...(n['zinc'] != null && { zinc: Number(n['zinc']) }),
+              ...(n['omega3'] != null && { omega3: Number(n['omega3']) }),
+              ...(n['cholesterol'] != null && { cholesterol: Number(n['cholesterol']) }),
+              ...(n['folate'] != null && { folate: Number(n['folate']) }),
+              ...(n['vitaminB6'] != null && { vitaminB6: Number(n['vitaminB6']) }),
+              ...(n['vitaminE'] != null && { vitaminE: Number(n['vitaminE']) }),
+              ...(n['vitaminK'] != null && { vitaminK: Number(n['vitaminK']) }),
+              ...(n['iodine'] != null && { iodine: Number(n['iodine']) }),
+              ...(n['selenium'] != null && { selenium: Number(n['selenium']) }),
+              ...(n['choline'] != null && { choline: Number(n['choline']) }),
+            },
+          });
+          ok++;
+        } catch {
+          fail++;
+        }
+      }
+      setImportStatus(fail === 0 ? `${ok} importado(s)` : `${ok} ok, ${fail} falha(s)`);
+    } catch {
+      setImportStatus('Erro ao ler o arquivo');
+    }
+    setTimeout(() => setImportStatus(null), 4000);
+  }
+
   function resetForm() {
     setName(''); setBrand(''); setCategory(''); setServingDesc(''); setServingGrams('');
     setCalories(''); setProtein(''); setCarbs(''); setFat(''); setFiber('');
@@ -170,7 +238,14 @@ export function FoodsPage() {
           </div>
         )}
 
-        <button type="submit" style={{ ...btnStyle, alignSelf: 'flex-start' }}>Criar alimento</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button type="submit" style={{ ...btnStyle, alignSelf: 'flex-start' }}>Criar alimento</button>
+          <label style={{ ...linkBtnStyle, fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
+            Importar JSON
+            <input type="file" accept=".json" onChange={handleJsonImport} style={{ display: 'none' }} />
+          </label>
+          {importStatus && <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{importStatus}</span>}
+        </div>
       </form>
 
       {/* Search */}

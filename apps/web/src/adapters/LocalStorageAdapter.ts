@@ -116,19 +116,21 @@ export class LocalStorageAdapter implements DataAdapter {
 
   async createDever(input: DeverInput): Promise<Result<Dever>> {
     const deveres = this.#readDeveres();
+    const createdAt = nowISODateTime();
     const base = {
       id: crypto.randomUUID() as DeverId,
       title: input.title,
       ...(input.area !== undefined && { area: input.area }),
       priority: input.priority,
       active: true,
-      createdAt: nowISODateTime(),
+      createdAt,
+      inicio: input.inicio ?? createdAt,
       completions: [] as Dever['completions'],
     };
     const dever: Dever =
       input.type === 'once'
-        ? { ...base, type: 'once', deadline: input.deadline }
-        : { ...base, type: 'cyclic', recurrence: input.recurrence };
+        ? { ...base, type: 'once', fim: input.fim }
+        : { ...base, type: 'cyclic', recurrence: input.recurrence, ...(input.fim !== undefined && { fim: input.fim }) };
     deveres.push(dever);
     this.#writeDeveres(deveres);
     return ok(dever);
@@ -330,14 +332,18 @@ export class LocalStorageAdapter implements DataAdapter {
     const deverItems: TodaySnapshot['deveres'] = [];
 
     for (const dever of deveres) {
+      const inicioDate = dever.inicio.split('T')[0] as ISODate;
+      if (inicioDate > date) continue;
+
       if (dever.type === 'once') {
-        const isOverdue = dever.deadline < date;
-        const isDueToday = dever.deadline === date;
+        const isOverdue = dever.fim < date;
+        const isDueToday = dever.fim === date;
         if (!isDueToday && !isOverdue) continue;
-        const isDone = dever.completions.some((c) => c.occurrenceDate === dever.deadline);
+        const isDone = dever.completions.some((c) => c.occurrenceDate === dever.fim);
         if (isDone) continue;
-        deverItems.push({ dever, occurrenceDate: dever.deadline, isDone: false, isOverdue });
+        deverItems.push({ dever, occurrenceDate: dever.fim, isDone: false, isOverdue });
       } else {
+        if (dever.fim && dever.fim < date) continue;
         if (!isOccurrenceOn(dever.recurrence, date)) continue;
         const isDone = dever.completions.some((c) => c.occurrenceDate === date);
         deverItems.push({ dever, occurrenceDate: date, isDone, isOverdue: false });
@@ -405,7 +411,19 @@ export class LocalStorageAdapter implements DataAdapter {
     const raw = localStorage.getItem(DEVERES_KEY);
     if (!raw) return [];
     try {
-      return DeverArraySchema.parse(JSON.parse(raw)) as unknown as Dever[];
+      const parsed = DeverArraySchema.parse(JSON.parse(raw));
+      // Inline migration: normalise legacy deveres that lack inicio/fim
+      for (const d of parsed) {
+        if (!d.inicio) {
+          (d as Record<string, unknown>)['inicio'] = d.createdAt;
+        }
+        if (d.type === 'once' && !d.fim) {
+          const legacy = (d as Record<string, unknown>)['deadline'] as string | undefined;
+          // deadline was already ISODate — use it directly as fim
+          (d as Record<string, unknown>)['fim'] = legacy ?? d.createdAt.split('T')[0];
+        }
+      }
+      return parsed as unknown as Dever[];
     } catch (e) {
       console.error(`[LocalStorageAdapter] Invalid data in "${DEVERES_KEY}", falling back to []:`, e);
       return [];
