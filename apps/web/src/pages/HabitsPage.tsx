@@ -18,7 +18,7 @@ export function HabitsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Hábitos</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Hábitos</h1>
 
       <form onSubmit={handleCreate} style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
         <input
@@ -39,8 +39,8 @@ export function HabitsPage() {
         <button type="submit" style={btnStyle}>Criar</button>
       </form>
 
-      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>}
+      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {state.message}</p>}
       {state.status === 'ok' && (
         <HabitList
           habits={state.habits}
@@ -54,14 +54,14 @@ export function HabitsPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  flex: 1, minWidth: 160, padding: '10px 14px', borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  flex: 1, minWidth: 160, padding: '9px 12px', borderRadius: 'var(--radius-md)',
+  border: '1px solid var(--border-input)', fontSize: 13.5, outline: 'none',
   background: 'var(--bg-input)', color: 'var(--text)',
   transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '10px 24px', borderRadius: 'var(--radius-md)', border: 'none',
+  padding: '9px 22px', borderRadius: 'var(--radius-md)', border: 'none',
   background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
-  fontSize: 14, fontWeight: 600, transition: 'background var(--transition)',
+  fontSize: 13.5, fontWeight: 600, transition: 'background var(--transition)',
 };

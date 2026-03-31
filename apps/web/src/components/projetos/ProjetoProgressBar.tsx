@@ -9,17 +9,17 @@ export function ProjetoProgressBar({ completed, total, percent }: Props) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{
         flex: 1,
-        height: 6,
-        borderRadius: 3,
-        background: 'var(--border)',
+        height: 4,
+        borderRadius: 2,
+        background: 'var(--progress-bg)',
         overflow: 'hidden',
       }}>
         <div style={{
           width: `${percent}%`,
           height: '100%',
-          borderRadius: 3,
-          background: percent === 100 ? '#22c55e' : 'var(--accent)',
-          transition: 'width 0.3s ease',
+          borderRadius: 2,
+          background: percent === 100 ? 'var(--progress-green)' : 'var(--accent)',
+          transition: 'width var(--transition-slow)',
         }} />
       </div>
       <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>

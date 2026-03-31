@@ -30,16 +30,16 @@ export function HojePage() {
 
   if (state.status === 'loading') {
     return (
-      <div style={{ padding: '40px 48px' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>
+      <div style={{ padding: '36px 44px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>
       </div>
     );
   }
 
   if (state.status === 'error') {
     return (
-      <div style={{ padding: '40px 48px' }}>
-        <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>
+      <div style={{ padding: '36px 44px' }}>
+        <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {state.message}</p>
       </div>
     );
   }
@@ -95,20 +95,21 @@ export function HojePage() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px', maxWidth: 1000 }}>
+    <div style={{ padding: '36px 44px', maxWidth: 960 }}>
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 40 }}>
+      <div style={{ marginBottom: 36 }}>
         <h1 style={{
-          fontWeight: 800,
-          fontSize: 34,
-          margin: '0 0 8px',
-          letterSpacing: '-1px',
+          fontWeight: 700,
+          fontSize: 30,
+          margin: '0 0 6px',
+          letterSpacing: '-0.5px',
           color: 'var(--text)',
+          lineHeight: 1.2,
         }}>
           {greeting()}
         </h1>
-        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 15, fontWeight: 450 }}>
+        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 14, fontWeight: 400, lineHeight: 1.5 }}>
           {formatDate(snapshot.date)}
         </p>
       </div>
@@ -116,9 +117,9 @@ export function HojePage() {
       {/* ── Summary cards grid ────────────────────────────────────────────── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-        gap: 16,
-        marginBottom: 36,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: 14,
+        marginBottom: 32,
       }}>
         {summaryCards.map((card) => (
           <DashboardCard key={card.label} {...card} />
@@ -126,7 +127,7 @@ export function HojePage() {
       </div>
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 44 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 40 }}>
         {quickActions.map((action) => (
           <button
             key={action.to}
@@ -134,21 +135,22 @@ export function HojePage() {
             onMouseEnter={e => {
               (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)';
               (e.currentTarget as HTMLElement).style.color = 'var(--accent)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--accent-soft)';
             }}
             onMouseLeave={e => {
               (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
-              (e.currentTarget as HTMLElement).style.color = 'var(--text)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)';
             }}
             style={{
-              padding: '9px 18px',
+              padding: '7px 16px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border)',
               background: 'var(--bg-card)',
-              color: 'var(--text)',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: 500,
-              boxShadow: 'var(--shadow-card)',
               transition: 'all var(--transition)',
             }}
           >

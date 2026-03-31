@@ -9,8 +9,8 @@ interface Props {
 
 const STATUS_CONFIG: Record<EtapaStatus, { label: string; color: string; bg: string }> = {
   pending: { label: 'pendente', color: 'var(--text-muted)', bg: 'var(--bg-badge)' },
-  in_progress: { label: 'em andamento', color: '#2563eb', bg: '#dbeafe' },
-  done: { label: 'concluída', color: '#16a34a', bg: '#dcfce7' },
+  in_progress: { label: 'em andamento', color: '#2563eb', bg: '#eff6ff' },
+  done: { label: 'concluída', color: '#059669', bg: '#ecfdf5' },
   blocked: { label: 'bloqueada', color: '#dc2626', bg: '#fef2f2' },
 };
 
@@ -23,8 +23,9 @@ export function EtapaCard({ etapa, projeto, onUpdateStatus, onRemove }: Props) {
   return (
     <li style={{
       display: 'flex', alignItems: 'flex-start', gap: 10,
-      padding: '10px 0', borderBottom: '1px solid var(--border)',
-      opacity: isDone ? 0.6 : 1,
+      padding: '9px 0', borderBottom: '1px solid var(--border)',
+      opacity: isDone ? 0.55 : 1,
+      transition: 'opacity var(--transition)',
     }}>
       {/* Done checkbox */}
       <button
@@ -37,11 +38,12 @@ export function EtapaCard({ etapa, projeto, onUpdateStatus, onRemove }: Props) {
         }}
         disabled={!isDone && !canFinish}
         style={{
-          width: 20, height: 20, minWidth: 20, borderRadius: 5,
-          border: isDone ? '2px solid #22c55e' : '2px solid var(--border-input)',
-          background: isDone ? '#22c55e' : 'var(--bg-check)',
-          color: '#fff', fontSize: 12, fontWeight: 700, cursor: isDone || canFinish ? 'pointer' : 'not-allowed',
+          width: 18, height: 18, minWidth: 18, borderRadius: 'var(--radius-xs)',
+          border: isDone ? '2px solid var(--progress-green)' : '2px solid var(--border-input)',
+          background: isDone ? 'var(--progress-green)' : 'var(--bg-check)',
+          color: '#fff', fontSize: 11, fontWeight: 700, cursor: isDone || canFinish ? 'pointer' : 'not-allowed',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2,
+          transition: 'all var(--transition)',
         }}
         title={isDone ? 'Reabrir' : canFinish ? 'Concluir' : 'Dependências não satisfeitas'}
       >
@@ -50,36 +52,37 @@ export function EtapaCard({ etapa, projeto, onUpdateStatus, onRemove }: Props) {
 
       <div style={{ flex: 1 }}>
         <div style={{
-          fontWeight: 500, fontSize: 14,
+          fontWeight: 500, fontSize: 13.5, lineHeight: 1.4,
           textDecoration: isDone ? 'line-through' : 'none',
           color: isDone ? 'var(--text-done)' : 'var(--text)',
+          transition: 'color var(--transition)',
         }}>
           {etapa.title}
         </div>
         {etapa.description && (
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>
             {etapa.description}
           </div>
         )}
-        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{
-            fontSize: 10, padding: '1px 6px', borderRadius: 4,
+            fontSize: 10, padding: '1px 6px', borderRadius: 'var(--radius-xs)',
             color: config.color, background: config.bg, fontWeight: 500,
           }}>
             {config.label}
           </span>
           {etapa.deadline && (
-            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 'var(--radius-xs)' }}>
               prazo: {etapa.deadline}
             </span>
           )}
           {etapa.effortHours !== undefined && (
-            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 'var(--radius-xs)' }}>
               {etapa.effortHours}h
             </span>
           )}
           {etapa.dependsOn && etapa.dependsOn.length > 0 && (
-            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 'var(--radius-xs)' }}>
               {etapa.dependsOn.length} dep.
             </span>
           )}
@@ -98,7 +101,11 @@ export function EtapaCard({ etapa, projeto, onUpdateStatus, onRemove }: Props) {
 
       <button
         onClick={() => { if (confirm(`Remover etapa "${etapa.title}"?`)) onRemove(projeto.id, etapa.id); }}
-        style={{ background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}
+        style={{
+          background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer',
+          fontSize: 13, padding: '2px 4px', borderRadius: 'var(--radius-xs)',
+          transition: 'color var(--transition)',
+        }}
         title="Remover etapa"
       >
         ✕

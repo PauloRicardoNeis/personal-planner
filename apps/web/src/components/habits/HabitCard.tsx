@@ -15,18 +15,19 @@ export function HabitCard({ habit, onMarkDone, onUnmarkDone, onArchive }: Props)
     <li style={{
       display: 'flex',
       alignItems: 'center',
-      gap: 12,
-      padding: '12px 0',
+      gap: 10,
+      padding: '10px 0',
       borderBottom: '1px solid var(--border)',
     }}>
       <button
         onClick={() => isDoneToday ? onUnmarkDone(habit.id, today) : onMarkDone(habit.id, today)}
         style={{
-          width: 22, height: 22, minWidth: 22, borderRadius: 6,
-          border: isDoneToday ? '2px solid #22c55e' : '2px solid var(--border-input)',
-          background: isDoneToday ? '#22c55e' : 'var(--bg-check)',
-          color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          width: 20, height: 20, minWidth: 20, borderRadius: 'var(--radius-sm)',
+          border: isDoneToday ? '2px solid var(--progress-green)' : '2px solid var(--border-input)',
+          background: isDoneToday ? 'var(--progress-green)' : 'var(--bg-check)',
+          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all var(--transition)',
         }}
         aria-label={isDoneToday ? 'Desmarcar' : 'Marcar como feito'}
       >
@@ -34,15 +35,26 @@ export function HabitCard({ habit, onMarkDone, onUnmarkDone, onArchive }: Props)
       </button>
 
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 500, textDecoration: isDoneToday ? 'line-through' : 'none', color: isDoneToday ? 'var(--text-done)' : 'var(--text)' }}>
+        <div style={{
+          fontWeight: 500, fontSize: 14, lineHeight: 1.4,
+          textDecoration: isDoneToday ? 'line-through' : 'none',
+          color: isDoneToday ? 'var(--text-done)' : 'var(--text)',
+          transition: 'color var(--transition)',
+        }}>
           {habit.title}
         </div>
-        {habit.category && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{habit.category}</div>}
+        {habit.category && (
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{habit.category}</div>
+        )}
       </div>
 
       <button
         onClick={() => { if (confirm(`Arquivar "${habit.title}"?`)) onArchive(habit.id); }}
-        style={{ background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer', fontSize: 16, padding: '0 4px' }}
+        style={{
+          background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer',
+          fontSize: 14, padding: '4px 6px', borderRadius: 'var(--radius-xs)',
+          transition: 'color var(--transition)',
+        }}
         title="Arquivar hábito"
         aria-label="Arquivar hábito"
       >

@@ -33,7 +33,7 @@ export function CalendarDayCell({
       onClick={onClick}
       style={{
         minHeight: 72,
-        borderRadius: 8,
+        borderRadius: 'var(--radius-md)',
         padding: '6px 8px',
         cursor: 'pointer',
         display: 'flex',
@@ -42,8 +42,8 @@ export function CalendarDayCell({
         background: isSelected ? 'var(--nav-active-bg)' : 'transparent',
         outline: isToday ? '2px solid var(--accent)' : undefined,
         outlineOffset: -2,
-        opacity: isCurrentMonth ? 1 : 0.4,
-        transition: 'background 0.1s',
+        opacity: isCurrentMonth ? 1 : 0.35,
+        transition: 'background var(--transition)',
       }}
     >
       {/* Day number */}
@@ -63,12 +63,13 @@ export function CalendarDayCell({
             <span
               key={dever.id}
               style={{
-                width: 7,
-                height: 7,
+                width: 6,
+                height: 6,
                 borderRadius: '50%',
                 background: PRIORITY_DOT_COLOR[dever.priority],
-                opacity: isDone ? 0.3 : 1,
+                opacity: isDone ? 0.25 : 1,
                 flexShrink: 0,
+                transition: 'opacity var(--transition)',
               }}
             />
           ))}

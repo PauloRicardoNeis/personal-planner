@@ -28,10 +28,10 @@ const STATUS_LABELS: Record<ProjetoStatus, string> = {
 };
 
 const STATUS_COLORS: Record<ProjetoStatus, { color: string; bg: string }> = {
-  planning: { color: '#9333ea', bg: '#f3e8ff' },
-  active: { color: '#2563eb', bg: '#dbeafe' },
-  paused: { color: '#d97706', bg: '#fef3c7' },
-  done: { color: '#16a34a', bg: '#dcfce7' },
+  planning: { color: '#7c3aed', bg: '#f5f3ff' },
+  active: { color: '#2563eb', bg: '#eff6ff' },
+  paused: { color: '#d97706', bg: '#fffbeb' },
+  done: { color: '#059669', bg: '#ecfdf5' },
   archived: { color: 'var(--text-muted)', bg: 'var(--bg-badge)' },
 };
 
@@ -52,10 +52,11 @@ export function ProjetoCard({
   return (
     <li style={{
       border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
+      borderRadius: 'var(--radius-lg)',
       background: 'var(--bg-card)',
       boxShadow: 'var(--shadow-card)',
       overflow: 'hidden',
+      transition: 'box-shadow var(--transition)',
     }}>
       {/* Header — click to expand */}
       <div
@@ -65,28 +66,31 @@ export function ProjetoCard({
           display: 'flex', flexDirection: 'column', gap: 8,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 12, transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontSize: 11, transform: expanded ? 'rotate(90deg)' : 'none',
+            transition: 'transform var(--transition)', color: 'var(--text-muted)',
+          }}>
             ▸
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, flex: 1, color: 'var(--text)' }}>
+          <span style={{ fontWeight: 600, fontSize: 14, flex: 1, color: 'var(--text)', letterSpacing: '-0.01em' }}>
             {projeto.title}
           </span>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
             <span style={{
-              fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 500,
+              fontSize: 10, padding: '2px 7px', borderRadius: 'var(--radius-xs)', fontWeight: 500,
               color: statusColor.color, background: statusColor.bg,
             }}>
               {STATUS_LABELS[projeto.status]}
             </span>
             <span style={{
-              fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 500,
+              fontSize: 10, padding: '2px 7px', borderRadius: 'var(--radius-xs)', fontWeight: 500,
               color: prioConfig.text, background: prioConfig.bg,
             }}>
               {prioConfig.label}
             </span>
             {projeto.area && (
-              <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '2px 8px', borderRadius: 4 }}>
+              <span style={{ fontSize: 10, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '2px 7px', borderRadius: 'var(--radius-xs)' }}>
                 {projeto.area}
               </span>
             )}
@@ -94,13 +98,13 @@ export function ProjetoCard({
         </div>
 
         {projeto.etapas.length > 0 && (
-          <div style={{ paddingLeft: 22 }}>
+          <div style={{ paddingLeft: 20 }}>
             <ProjetoProgressBar {...progress} />
           </div>
         )}
 
         {projeto.description && !expanded && (
-          <div style={{ paddingLeft: 22, fontSize: 12, color: 'var(--text-muted)' }}>
+          <div style={{ paddingLeft: 20, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4 }}>
             {projeto.description.length > 100 ? projeto.description.slice(0, 100) + '...' : projeto.description}
           </div>
         )}
@@ -110,7 +114,7 @@ export function ProjetoCard({
       {expanded && (
         <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
           {projeto.description && (
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '12px 0 8px' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '12px 0 8px', lineHeight: 1.5 }}>
               {projeto.description}
             </p>
           )}
@@ -146,8 +150,9 @@ export function ProjetoCard({
               onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar "${projeto.title}"?`)) onArchive(projeto.id); }}
               style={{
                 padding: '5px 12px', borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-input)', background: 'none',
+                border: '1px solid var(--border)', background: 'none',
                 color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12,
+                transition: 'all var(--transition)',
               }}
             >
               Arquivar
@@ -156,7 +161,7 @@ export function ProjetoCard({
 
           {/* Etapas */}
           <div style={{ marginTop: 8 }}>
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
+            <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', margin: '0 0 8px' }}>
               Etapas ({progress.completed}/{progress.total})
             </h4>
             <EtapaList
@@ -179,7 +184,7 @@ function StatusButton({ label, onClick }: { label: string; onClick: () => void }
       style={{
         padding: '5px 12px', borderRadius: 'var(--radius-md)', border: 'none',
         background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
-        fontSize: 12, fontWeight: 600,
+        fontSize: 12, fontWeight: 600, transition: 'background var(--transition)',
       }}
     >
       {label}

@@ -29,17 +29,17 @@ export function CalendarGrid({
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: 4,
-        marginBottom: 4,
+        gap: 3,
+        marginBottom: 3,
       }}>
         {WEEKDAY_HEADERS.map((h) => (
           <div key={h} style={{
             textAlign: 'center',
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 600,
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.06em',
             padding: '4px 0',
           }}>
             {h}
@@ -52,8 +52,8 @@ export function CalendarGrid({
         <div key={wi} style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: 4,
-          marginBottom: 4,
+          gap: 3,
+          marginBottom: 3,
         }}>
           {week.map((date) => {
             const dateMonth = new Date(date + 'T00:00:00').getMonth();

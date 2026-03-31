@@ -7,24 +7,26 @@ import { CalendarDayPanel } from '../components/calendar/CalendarDayPanel.js';
 
 const navBtnStyle: React.CSSProperties = {
   background: 'none',
-  border: '1px solid var(--border-input)',
-  borderRadius: 6,
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
   padding: '4px 10px',
   cursor: 'pointer',
-  color: 'var(--text)',
-  fontSize: 16,
+  color: 'var(--text-secondary)',
+  fontSize: 15,
   lineHeight: 1.2,
+  transition: 'all var(--transition)',
 };
 
 const todayBtnStyle: React.CSSProperties = {
   background: 'none',
-  border: '1px solid var(--border-input)',
-  borderRadius: 6,
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
   padding: '4px 12px',
   cursor: 'pointer',
   color: 'var(--text-muted)',
-  fontSize: 13,
+  fontSize: 12,
   fontWeight: 500,
+  transition: 'all var(--transition)',
 };
 
 export function CalendarPage() {
@@ -48,7 +50,7 @@ export function CalendarPage() {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        padding: '16px 24px',
+        padding: '14px 24px',
         borderBottom: '1px solid var(--border)',
         flexShrink: 0,
       }}>
@@ -57,10 +59,11 @@ export function CalendarPage() {
           flex: 1,
           textAlign: 'center',
           margin: 0,
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: 600,
           color: 'var(--text)',
           textTransform: 'capitalize',
+          letterSpacing: '-0.01em',
         }}>
           {cal.monthLabel}
         </h2>
@@ -74,12 +77,12 @@ export function CalendarPage() {
         {/* Grid */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
           {state.status === 'loading' && (
-            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 40 }}>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 40, fontSize: 14 }}>
               Carregando...
             </p>
           )}
           {state.status === 'error' && (
-            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 40 }}>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 40, fontSize: 14 }}>
               Erro: {state.message}
             </p>
           )}

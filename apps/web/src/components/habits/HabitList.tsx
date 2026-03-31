@@ -10,7 +10,7 @@ interface Props {
 
 export function HabitList({ habits, onMarkDone, onUnmarkDone, onArchive }: Props) {
   if (habits.length === 0) {
-    return <p style={{ color: '#888', textAlign: 'center', marginTop: 24 }}>Nenhum hábito ainda. Crie o primeiro acima.</p>;
+    return <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 24, fontSize: 14 }}>Nenhum hábito ainda. Crie o primeiro acima.</p>;
   }
 
   return (

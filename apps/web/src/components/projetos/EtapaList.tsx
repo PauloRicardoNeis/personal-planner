@@ -41,22 +41,23 @@ export function EtapaList({ projeto, onAddEtapa, onUpdateStatus, onRemoveEtapa }
       </ul>
 
       {/* Inline add */}
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 6, marginTop: 8 }}>
         <input
           type="text"
           placeholder="Nova etapa..."
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           style={{
-            flex: 1, padding: '7px 12px', borderRadius: 'var(--radius-md)',
+            flex: 1, padding: '7px 10px', borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-input)', fontSize: 13,
             background: 'var(--bg-input)', color: 'var(--text)', outline: 'none',
+            transition: 'border-color var(--transition), box-shadow var(--transition)',
           }}
         />
         <button type="submit" style={{
           padding: '7px 14px', borderRadius: 'var(--radius-md)', border: 'none',
           background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
-          fontSize: 13, fontWeight: 600,
+          fontSize: 13, fontWeight: 600, transition: 'background var(--transition)',
         }}>
           +
         </button>

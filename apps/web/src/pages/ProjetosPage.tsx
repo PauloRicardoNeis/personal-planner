@@ -58,9 +58,9 @@ export function ProjetosPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Projetos</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Projetos</h1>
 
-      <form onSubmit={handleCreate} style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <form onSubmit={handleCreate} style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Title + area */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input type="text" placeholder="Nome do projeto" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ ...inputStyle, flex: 2, minWidth: 180 }} />
@@ -88,11 +88,11 @@ export function ProjetosPage() {
         {/* Dates */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
-            <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Início:</label>
+            <label style={labelStyle}>Início:</label>
             <input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Entrega:</label>
+            <label style={labelStyle}>Entrega:</label>
             <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
           </div>
         </div>
@@ -100,8 +100,8 @@ export function ProjetosPage() {
         <button type="submit" style={btnStyle}>Criar projeto</button>
       </form>
 
-      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>}
+      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {state.message}</p>}
       {state.status === 'ok' && (
         <ProjetoList
           projetos={state.projetos}
@@ -116,21 +116,25 @@ export function ProjetosPage() {
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text-muted)', marginRight: 6, fontWeight: 500,
+};
+
 const inputStyle: React.CSSProperties = {
-  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
-  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
   transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
-  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
   transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '11px 24px', borderRadius: 'var(--radius-md)', border: 'none',
+  padding: '9px 22px', borderRadius: 'var(--radius-md)', border: 'none',
   background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
-  fontSize: 14, fontWeight: 600, alignSelf: 'flex-start',
-  transition: 'background var(--transition), transform var(--transition)',
+  fontSize: 13.5, fontWeight: 600, alignSelf: 'flex-start',
+  transition: 'background var(--transition)',
 };

@@ -11,14 +11,14 @@ interface Props {
 
 function checkStyle(isDone: boolean): React.CSSProperties {
   return {
-    width: 22,
-    height: 22,
-    minWidth: 22,
-    borderRadius: 6,
-    border: isDone ? '2px solid #22c55e' : '2px solid var(--border-input)',
-    background: isDone ? '#22c55e' : 'var(--bg-check)',
+    width: 20,
+    height: 20,
+    minWidth: 20,
+    borderRadius: 'var(--radius-sm)',
+    border: isDone ? '2px solid var(--progress-green)' : '2px solid var(--border-input)',
+    background: isDone ? 'var(--progress-green)' : 'var(--bg-check)',
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 700,
     cursor: 'pointer',
     display: 'flex',
@@ -26,6 +26,7 @@ function checkStyle(isDone: boolean): React.CSSProperties {
     justifyContent: 'center',
     marginTop: 2,
     flexShrink: 0,
+    transition: 'all var(--transition)',
   };
 }
 
@@ -38,7 +39,7 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
   const labels = { high: 'alta', medium: 'média', low: 'baixa' };
   const c = vars[priority];
   return (
-    <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '2px 6px', borderRadius: 4, fontWeight: 500 }}>
+    <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '1px 6px', borderRadius: 'var(--radius-xs)', fontWeight: 500 }}>
       {labels[priority]}
     </span>
   );
@@ -66,7 +67,7 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 20px',
+        padding: '14px 18px',
         borderBottom: '1px solid var(--border)',
         gap: 8,
       }}>
@@ -86,10 +87,11 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
             border: 'none',
             cursor: 'pointer',
             color: 'var(--text-muted)',
-            fontSize: 16,
+            fontSize: 14,
             padding: '2px 4px',
-            borderRadius: 4,
+            borderRadius: 'var(--radius-xs)',
             lineHeight: 1,
+            transition: 'color var(--transition)',
           }}
           aria-label="Fechar"
         >
@@ -98,7 +100,7 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 18px' }}>
         {entry.deveres.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 16 }}>
             Nenhum dever neste dia.
@@ -111,8 +113,8 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: 12,
-                  padding: '10px 0',
+                  gap: 10,
+                  padding: '9px 0',
                   borderBottom: '1px solid var(--border)',
                 }}
               >
@@ -129,19 +131,21 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
                   <span style={{
                     textDecoration: isDone ? 'line-through' : 'none',
                     color: isDone ? 'var(--text-done)' : 'var(--text)',
-                    fontSize: 14,
+                    fontSize: 13.5,
+                    lineHeight: 1.4,
+                    transition: 'color var(--transition)',
                   }}>
                     {dever.title}
                   </span>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
                     <PriorityBadge priority={dever.priority} />
                     {dever.area && (
                       <span style={{
                         fontSize: 11,
                         color: 'var(--text-badge)',
                         background: 'var(--bg-badge)',
-                        padding: '2px 6px',
-                        borderRadius: 4,
+                        padding: '1px 6px',
+                        borderRadius: 'var(--radius-xs)',
                       }}>
                         {dever.area}
                       </span>

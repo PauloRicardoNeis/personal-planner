@@ -1,7 +1,7 @@
 {
   "name": "planner-app",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.13",
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "typecheck": "pnpm -r typecheck",

@@ -97,11 +97,11 @@ export function NutritionPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Nutricao</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Nutricao</h1>
 
       {/* Date selector */}
       <div style={{ marginBottom: 24 }}>
-        <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Data:</label>
+        <label style={labelStyle}>Data:</label>
         <input
           type="date"
           value={date}
@@ -111,10 +111,14 @@ export function NutritionPage() {
       </div>
 
       {/* Nutrition Summary */}
-      {summaryState.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-      {summaryState.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {summaryState.message}</p>}
+      {summaryState.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+      {summaryState.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {summaryState.message}</p>}
       {summaryState.status === 'ok' && (
-        <div style={{ marginBottom: 32, padding: 16, border: '1px solid var(--border)', borderRadius: 8 }}>
+        <div style={{
+          marginBottom: 28, padding: '18px 20px',
+          border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+          background: 'var(--bg-card)', boxShadow: 'var(--shadow-card)',
+        }}>
           <h2 style={sectionTitleStyle}>Resumo do dia</h2>
           <MacroBar
             label="Calorias"
@@ -152,7 +156,7 @@ export function NutritionPage() {
       )}
 
       {/* Diary Entries */}
-      <section style={{ marginBottom: 32 }}>
+      <section style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h2 style={sectionTitleStyle}>Registros do dia</h2>
           <button onClick={() => setShowForm(!showForm)} style={btnStyle}>
@@ -162,13 +166,18 @@ export function NutritionPage() {
 
         {/* Add entry form */}
         {showForm && (
-          <form onSubmit={handleAddEntry} style={{ marginBottom: 20, padding: 16, border: '1px solid var(--border)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <form onSubmit={handleAddEntry} style={{
+            marginBottom: 20, padding: '16px 18px',
+            border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+            background: 'var(--bg-card)',
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
             <div style={{ display: 'flex', gap: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, color: 'var(--text)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text)', cursor: 'pointer' }}>
                 <input type="radio" name="entryMode" checked={entryMode === 'food'} onChange={() => setEntryMode('food')} />
                 Do banco
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, color: 'var(--text)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text)', cursor: 'pointer' }}>
                 <input type="radio" name="entryMode" checked={entryMode === 'quick'} onChange={() => setEntryMode('quick')} />
                 Entrada rapida
               </label>
@@ -228,7 +237,7 @@ export function NutritionPage() {
                   style={{ ...inputStyle, maxWidth: 120 }}
                 />
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Nutrientes por 100g:</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <input type="number" placeholder="Calorias" value={quickCalories} onChange={(e) => setQuickCalories(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
                   <input type="number" placeholder="Proteina" value={quickProtein} onChange={(e) => setQuickProtein(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
                   <input type="number" placeholder="Carbs" value={quickCarbs} onChange={(e) => setQuickCarbs(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
@@ -251,15 +260,15 @@ export function NutritionPage() {
         )}
 
         {/* Entry list */}
-        {diaryState.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-        {diaryState.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {diaryState.message}</p>}
+        {diaryState.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+        {diaryState.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {diaryState.message}</p>}
         {diaryState.status === 'ok' && (
           <DiaryList entries={diaryState.entries} foodMap={foodMap} onDelete={handleDelete} />
         )}
       </section>
 
       {/* Links */}
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 10 }}>
         <button onClick={() => navigate('/alimentos')} style={linkBtnStyle}>Banco de alimentos</button>
         <button onClick={() => navigate('/perfil')} style={linkBtnStyle}>Perfil nutricional</button>
       </div>
@@ -275,7 +284,7 @@ function DiaryList({ entries, foodMap, onDelete }: {
   onDelete: (id: DiaryEntryId) => void;
 }) {
   if (entries.length === 0) {
-    return <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Nenhum registro para este dia.</p>;
+    return <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Nenhum registro para este dia.</p>;
   }
 
   // Group by meal
@@ -290,7 +299,10 @@ function DiaryList({ entries, foodMap, onDelete }: {
     <div>
       {Array.from(groups.entries()).map(([mealName, mealEntries]) => (
         <div key={mealName} style={{ marginBottom: 16 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <h3 style={{
+            fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+            textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8,
+          }}>
             {mealName}
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -306,16 +318,23 @@ function DiaryList({ entries, foodMap, onDelete }: {
                 cals = computePortionNutrients(entry.nutrients, entry.grams).calories;
               }
               return (
-                <li key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                <li key={entry.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '8px 0', borderBottom: '1px solid var(--border)',
+                }}>
                   <div>
-                    <span style={{ color: 'var(--text)', fontSize: 14 }}>{name}</span>
+                    <span style={{ color: 'var(--text)', fontSize: 13.5 }}>{name}</span>
                     <span style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 8 }}>
                       {entry.grams}g - {Math.round(cals)} kcal
                     </span>
                   </div>
                   <button
                     onClick={() => onDelete(entry.id)}
-                    style={{ background: 'none', border: 'none', color: 'var(--priority-high-text)', cursor: 'pointer', fontSize: 14, padding: '4px 8px' }}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--priority-high-text)',
+                      cursor: 'pointer', fontSize: 12, padding: '4px 8px',
+                      borderRadius: 'var(--radius-xs)', transition: 'opacity var(--transition)',
+                    }}
                   >
                     Remover
                   </button>
@@ -356,12 +375,12 @@ function MacroBar({ label, current, target, percent, unit, isProtein }: {
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
         <span style={{ color: 'var(--text)', fontWeight: 500 }}>{label}</span>
-        <span style={{ color: 'var(--text-muted)' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
           {Math.round(current)}/{Math.round(target)} {unit} ({percent}%)
         </span>
       </div>
-      <div style={{ height: 8, borderRadius: 4, background: 'var(--progress-bg)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${barPercent}%`, borderRadius: 4, background: barColor, transition: 'width 0.3s ease' }} />
+      <div style={{ height: 4, borderRadius: 2, background: 'var(--progress-bg)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${barPercent}%`, borderRadius: 2, background: barColor, transition: 'width var(--transition-slow)' }} />
       </div>
     </div>
   );
@@ -370,23 +389,34 @@ function MacroBar({ label, current, target, percent, unit, isProtein }: {
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginTop: 0,
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12, marginTop: 0,
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text-muted)', marginRight: 6, fontWeight: 500,
 };
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: 6, border: 'none',
-  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+  padding: '8px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
+  fontSize: 13.5, fontWeight: 600, transition: 'background var(--transition)',
 };
 
 const linkBtnStyle: React.CSSProperties = {
-  padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border-input)',
-  background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer', fontSize: 14,
+  padding: '8px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+  background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer',
+  fontSize: 13.5, transition: 'all var(--transition)',
 };

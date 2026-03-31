@@ -14,11 +14,11 @@ export function ProjetoList({
   projetos, onUpdateStatus, onArchive, onAddEtapa, onUpdateEtapaStatus, onRemoveEtapa,
 }: Props) {
   if (projetos.length === 0) {
-    return <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 24 }}>Nenhum projeto ainda. Crie o primeiro acima.</p>;
+    return <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 24, fontSize: 14 }}>Nenhum projeto ainda. Crie o primeiro acima.</p>;
   }
 
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
       {projetos.map((projeto) => (
         <ProjetoCard
           key={projeto.id}

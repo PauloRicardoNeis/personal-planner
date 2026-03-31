@@ -35,14 +35,15 @@ export function UpdateBanner() {
 
   return (
     <div style={{
-      background: '#3b82f6',
-      color: '#fff',
-      padding: '10px 16px',
+      background: 'var(--accent)',
+      color: 'var(--accent-text)',
+      padding: '9px 16px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
-      fontSize: 14,
+      fontSize: 13,
+      fontFamily: 'var(--font-sans)',
     }}>
       <span>
         Nova versão disponível: <strong>v{update.version}</strong>
@@ -53,13 +54,15 @@ export function UpdateBanner() {
         disabled={installing}
         style={{
           background: '#fff',
-          color: '#3b82f6',
+          color: 'var(--accent)',
           border: 'none',
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           padding: '4px 12px',
           cursor: installing ? 'default' : 'pointer',
           fontWeight: 600,
+          fontSize: 12,
           opacity: installing ? 0.7 : 1,
+          transition: 'opacity var(--transition)',
         }}
       >
         {installing ? 'Instalando...' : 'Instalar e reiniciar'}

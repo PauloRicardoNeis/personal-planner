@@ -67,9 +67,9 @@ export function DeveresPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Deveres</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Deveres</h1>
 
-      <form onSubmit={handleCreate} style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <form onSubmit={handleCreate} style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Title + area */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input type="text" placeholder="Nome do dever" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ ...inputStyle, flex: 2, minWidth: 180 }} />
@@ -92,18 +92,18 @@ export function DeveresPage() {
         {/* Início / Fim */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
-            <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Início:</label>
+            <label style={labelStyle}>Início:</label>
             <input type="datetime-local" value={inicio} onChange={(e) => setInicio(e.target.value)} style={inputStyle} />
           </div>
           {type === 'once' && (
             <div>
-              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (padrão: hoje):</label>
+              <label style={labelStyle}>Fim (padrão: hoje):</label>
               <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
             </div>
           )}
           {type === 'cyclic' && (
             <div>
-              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (opcional):</label>
+              <label style={labelStyle}>Fim (opcional):</label>
               <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
             </div>
           )}
@@ -118,17 +118,18 @@ export function DeveresPage() {
             </select>
 
             {recurrenceType === 'weekly' && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {ALL_WEEKDAYS.map(({ key, label }) => (
                   <button
                     type="button"
                     key={key}
                     onClick={() => toggleWeekday(key)}
                     style={{
-                      padding: '4px 10px', borderRadius: 6, fontSize: 13, cursor: 'pointer',
+                      padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 13, cursor: 'pointer',
                       border: weekdays.includes(key) ? '2px solid var(--btn-bg)' : '2px solid var(--border-input)',
                       background: weekdays.includes(key) ? 'var(--btn-bg)' : 'var(--bg-check)',
                       color: weekdays.includes(key) ? 'var(--btn-text)' : 'var(--text)',
+                      transition: 'all var(--transition)',
                     }}
                   >
                     {label}
@@ -139,7 +140,7 @@ export function DeveresPage() {
 
             {recurrenceType === 'monthly' && (
               <div>
-                <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Dia do mês:</label>
+                <label style={labelStyle}>Dia do mês:</label>
                 <input type="number" min={1} max={31} value={monthDay} onChange={(e) => setMonthDay(Number(e.target.value))} style={{ ...inputStyle, maxWidth: 80 }} />
               </div>
             )}
@@ -149,8 +150,8 @@ export function DeveresPage() {
         <button type="submit" style={btnStyle}>Criar dever</button>
       </form>
 
-      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>}
+      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {state.message}</p>}
       {state.status === 'ok' && (
         <DeverList
           deveres={state.deveres}
@@ -163,21 +164,25 @@ export function DeveresPage() {
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text-muted)', marginRight: 6, fontWeight: 500,
+};
+
 const inputStyle: React.CSSProperties = {
-  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
-  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
   transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
-  fontSize: 14, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
   transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '11px 24px', borderRadius: 'var(--radius-md)', border: 'none',
+  padding: '9px 22px', borderRadius: 'var(--radius-md)', border: 'none',
   background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
-  fontSize: 14, fontWeight: 600, alignSelf: 'flex-start',
-  transition: 'background var(--transition), transform var(--transition)',
+  fontSize: 13.5, fontWeight: 600, alignSelf: 'flex-start',
+  transition: 'background var(--transition)',
 };

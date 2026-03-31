@@ -1,6 +1,6 @@
 {
   "productName": "Planner",
-  "version": "0.1.0",
+  "version": "0.1.13",
   "identifier": "com.planner-app.desktop",
   "build": {
     "frontendDist": "../../../apps/web/dist",

@@ -183,7 +183,7 @@ export function FoodsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Alimentos</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Alimentos</h1>
 
       {/* Create food form */}
       <form onSubmit={handleCreate} style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -198,21 +198,21 @@ export function FoodsPage() {
           <input type="number" placeholder="Gramas da porcao" value={servingGrams} onChange={(e) => setServingGrams(e.target.value)} min={1} style={{ ...inputStyle, flex: 1, minWidth: 100 }} />
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--label)', margin: '4px 0 0' }}>Nutrientes por 100g (obrigatorios):</p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input type="number" placeholder="Calorias *" value={calories} onChange={(e) => setCalories(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-          <input type="number" placeholder="Proteina *" value={protein} onChange={(e) => setProtein(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-          <input type="number" placeholder="Carbs *" value={carbs} onChange={(e) => setCarbs(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-          <input type="number" placeholder="Gordura *" value={fat} onChange={(e) => setFat(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-          <input type="number" placeholder="Fibra *" value={fiber} onChange={(e) => setFiber(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0', fontWeight: 500 }}>Nutrientes por 100g (obrigatorios):</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <input type="number" placeholder="Calorias *" value={calories} onChange={(e) => setCalories(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+          <input type="number" placeholder="Proteina *" value={protein} onChange={(e) => setProtein(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+          <input type="number" placeholder="Carbs *" value={carbs} onChange={(e) => setCarbs(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+          <input type="number" placeholder="Gordura *" value={fat} onChange={(e) => setFat(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+          <input type="number" placeholder="Fibra *" value={fiber} onChange={(e) => setFiber(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
         </div>
 
-        <button type="button" onClick={() => setShowOptional(!showOptional)} style={{ ...linkBtnStyle, alignSelf: 'flex-start', fontSize: 13 }}>
+        <button type="button" onClick={() => setShowOptional(!showOptional)} style={{ ...linkBtnStyle, alignSelf: 'flex-start', fontSize: 12 }}>
           {showOptional ? 'Ocultar nutrientes opcionais' : 'Mostrar nutrientes opcionais'}
         </button>
 
         {showOptional && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <input type="number" placeholder="Gord. sat." value={saturatedFat} onChange={(e) => setSaturatedFat(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Gord. trans" value={transFat} onChange={(e) => setTransFat(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Acucar" value={sugar} onChange={(e) => setSugar(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
@@ -223,28 +223,28 @@ export function FoodsPage() {
             <input type="number" placeholder="Vit. A (mcg)" value={vitaminA} onChange={(e) => setVitaminA(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Vit. C (mg)" value={vitaminC} onChange={(e) => setVitaminC(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Vit. D (mcg)" value={vitaminD} onChange={(e) => setVitaminD(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
-            <input type="number" placeholder="Vit. B12 (mcg)" value={vitaminB12} onChange={(e) => setVitaminB12(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-            <input type="number" placeholder="Magnesio (mg)" value={magnesium} onChange={(e) => setMagnesium(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Vit. B12 (mcg)" value={vitaminB12} onChange={(e) => setVitaminB12(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+            <input type="number" placeholder="Magnesio (mg)" value={magnesium} onChange={(e) => setMagnesium(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
             <input type="number" placeholder="Zinco (mg)" value={zinc} onChange={(e) => setZinc(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Omega 3 (g)" value={omega3} onChange={(e) => setOmega3(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
-            <input type="number" placeholder="Colesterol (mg)" value={cholesterol} onChange={(e) => setCholesterol(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-            <input type="number" placeholder="Folato (mcg)" value={folate} onChange={(e) => setFolate(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
-            <input type="number" placeholder="Vit. B6 (mg)" value={vitaminB6} onChange={(e) => setVitaminB6(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Colesterol (mg)" value={cholesterol} onChange={(e) => setCholesterol(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+            <input type="number" placeholder="Folato (mcg)" value={folate} onChange={(e) => setFolate(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+            <input type="number" placeholder="Vit. B6 (mg)" value={vitaminB6} onChange={(e) => setVitaminB6(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
             <input type="number" placeholder="Vit. E (mg)" value={vitaminE} onChange={(e) => setVitaminE(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Vit. K (mcg)" value={vitaminK} onChange={(e) => setVitaminK(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
             <input type="number" placeholder="Iodo (mcg)" value={iodine} onChange={(e) => setIodine(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
-            <input type="number" placeholder="Selenio (mcg)" value={selenium} onChange={(e) => setSelenium(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 110 }} />
+            <input type="number" placeholder="Selenio (mcg)" value={selenium} onChange={(e) => setSelenium(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 105 }} />
             <input type="number" placeholder="Colina (mg)" value={choline} onChange={(e) => setCholine(e.target.value)} step="any" style={{ ...inputStyle, maxWidth: 100 }} />
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button type="submit" style={{ ...btnStyle, alignSelf: 'flex-start' }}>Criar alimento</button>
-          <label style={{ ...linkBtnStyle, fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
+          <label style={{ ...linkBtnStyle, fontSize: 12, cursor: 'pointer', userSelect: 'none' }}>
             Importar JSON
             <input type="file" accept=".json" onChange={handleJsonImport} style={{ display: 'none' }} />
           </label>
-          {importStatus && <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{importStatus}</span>}
+          {importStatus && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{importStatus}</span>}
         </div>
       </form>
 
@@ -258,35 +258,42 @@ export function FoodsPage() {
       />
 
       {/* Food list */}
-      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)' }}>Carregando...</p>}
-      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)' }}>Erro: {state.message}</p>}
+      {state.status === 'loading' && <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Carregando...</p>}
+      {state.status === 'error' && <p style={{ color: 'var(--priority-high-text)', fontSize: 14 }}>Erro: {state.message}</p>}
       {state.status === 'ok' && filteredFoods.length === 0 && (
-        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Nenhum alimento encontrado.</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Nenhum alimento encontrado.</p>
       )}
       {state.status === 'ok' && (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {filteredFoods.map((food) => (
-            <li key={food.id} style={{ borderBottom: '1px solid var(--border)', padding: '12px 0' }}>
+            <li key={food.id} style={{ borderBottom: '1px solid var(--border)', padding: '10px 0' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                 onClick={() => setExpandedId(expandedId === food.id ? null : food.id)}
               >
                 <div>
-                  <span style={{ color: 'var(--text)', fontWeight: 500, fontSize: 14 }}>{food.name}</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 500, fontSize: 13.5 }}>{food.name}</span>
                   {food.brand && <span style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 8 }}>{food.brand}</span>}
                   {food.category && (
-                    <span style={{ fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4, marginLeft: 8 }}>
+                    <span style={{
+                      fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
+                      padding: '1px 6px', borderRadius: 'var(--radius-xs)', marginLeft: 8,
+                    }}>
                       {food.category}
                     </span>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                     {food.nutrients.calories} kcal | {food.nutrients.protein}g prot /100g
                   </span>
                   <button
                     onClick={(e) => { e.stopPropagation(); void archiveFood(food.id); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--priority-high-text)', cursor: 'pointer', fontSize: 13, padding: '4px 8px' }}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--priority-high-text)',
+                      cursor: 'pointer', fontSize: 12, padding: '4px 8px',
+                      borderRadius: 'var(--radius-xs)', transition: 'opacity var(--transition)',
+                    }}
                   >
                     Arquivar
                   </button>
@@ -294,7 +301,10 @@ export function FoodsPage() {
               </div>
 
               {expandedId === food.id && (
-                <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--bg-badge)', borderRadius: 6, fontSize: 13 }}>
+                <div style={{
+                  marginTop: 8, padding: '10px 14px',
+                  background: 'var(--bg-badge)', borderRadius: 'var(--radius-md)', fontSize: 13,
+                }}>
                   <NutrientTable nutrients={food.nutrients} />
                   {food.servingDescription && (
                     <p style={{ color: 'var(--text-muted)', margin: '8px 0 0', fontSize: 12 }}>
@@ -348,15 +358,15 @@ function NutrientTable({ nutrients }: { nutrients: NutrientsPer100g }) {
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
-          <th style={{ textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>Nutriente</th>
-          <th style={{ textAlign: 'right', color: 'var(--text-muted)', fontWeight: 600, paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>Por 100g</th>
+          <th style={{ textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>Nutriente</th>
+          <th style={{ textAlign: 'right', color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>Por 100g</th>
         </tr>
       </thead>
       <tbody>
         {rows.filter((r) => r.value !== undefined).map((row) => (
           <tr key={row.label}>
-            <td style={{ color: 'var(--text)', padding: '2px 0' }}>{row.label}</td>
-            <td style={{ color: 'var(--text)', padding: '2px 0', textAlign: 'right' }}>{row.value} {row.unit}</td>
+            <td style={{ color: 'var(--text)', padding: '2px 0', fontSize: 13 }}>{row.label}</td>
+            <td style={{ color: 'var(--text)', padding: '2px 0', textAlign: 'right', fontSize: 13 }}>{row.value} {row.unit}</td>
           </tr>
         ))}
       </tbody>
@@ -367,15 +377,19 @@ function NutrientTable({ nutrients }: { nutrients: NutrientsPer100g }) {
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border-input)', fontSize: 14, outline: 'none',
+  padding: '9px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-input)',
+  fontSize: 13.5, outline: 'none', background: 'var(--bg-input)', color: 'var(--text)',
+  transition: 'border-color var(--transition), box-shadow var(--transition)',
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '10px 20px', borderRadius: 6, border: 'none',
-  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+  padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+  background: 'var(--btn-bg)', color: 'var(--btn-text)', cursor: 'pointer',
+  fontSize: 13.5, fontWeight: 600, transition: 'background var(--transition)',
 };
 
 const linkBtnStyle: React.CSSProperties = {
-  padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border-input)',
-  background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+  padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+  background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer',
+  transition: 'all var(--transition)',
 };

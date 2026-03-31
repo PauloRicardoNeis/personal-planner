@@ -10,7 +10,7 @@ interface Props {
 
 export function DeverList({ deveres, onMarkDone, onUnmarkDone, onArchive }: Props) {
   if (deveres.length === 0) {
-    return <p style={{ color: '#888', textAlign: 'center', marginTop: 24 }}>Nenhum dever ainda. Crie o primeiro acima.</p>;
+    return <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 24, fontSize: 14 }}>Nenhum dever ainda. Crie o primeiro acima.</p>;
   }
 
   return (

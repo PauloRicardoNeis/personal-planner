@@ -29,7 +29,7 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
         if (!link) return;
         const el = e.currentTarget as HTMLElement;
         el.style.boxShadow = 'var(--shadow-hover)';
-        el.style.transform = 'translateY(-3px)';
+        el.style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLElement;
@@ -38,29 +38,29 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
       }}
       style={{
         background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '24px 24px 20px',
+        borderRadius: 'var(--radius-lg)',
+        padding: '20px 20px 18px',
         boxShadow: 'var(--shadow-card)',
         border: '1px solid var(--border)',
         cursor: link ? 'pointer' : undefined,
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 2,
         transition: 'box-shadow var(--transition), transform var(--transition)',
       }}
     >
       {/* Icon */}
       {icon && (
         <div style={{
-          width: 42,
-          height: 42,
+          width: 36,
+          height: 36,
           borderRadius: 'var(--radius-md)',
           background: 'var(--accent-soft)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 20,
-          marginBottom: 12,
+          fontSize: 17,
+          marginBottom: 10,
         }}>
           {icon}
         </div>
@@ -72,18 +72,18 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
         fontWeight: 600,
         color: 'var(--text-muted)',
         textTransform: 'uppercase',
-        letterSpacing: '0.08em',
+        letterSpacing: '0.06em',
       }}>
         {label}
       </div>
 
       {/* Value */}
       <div style={{
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 700,
         color: 'var(--text)',
-        letterSpacing: '-0.5px',
-        lineHeight: 1.2,
+        letterSpacing: '-0.3px',
+        lineHeight: 1.25,
       }}>
         {value}
       </div>
@@ -92,17 +92,17 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
       {progress !== undefined && (
         <div style={{ marginTop: 10 }}>
           <div style={{
-            height: 5,
-            borderRadius: 3,
+            height: 4,
+            borderRadius: 2,
             background: 'var(--progress-bg)',
             overflow: 'hidden',
           }}>
             <div style={{
               width: `${Math.min(progress, 1) * 100}%`,
               height: '100%',
-              borderRadius: 3,
+              borderRadius: 2,
               background: barColor,
-              transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'width var(--transition-slow)',
             }} />
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, textAlign: 'right' }}>

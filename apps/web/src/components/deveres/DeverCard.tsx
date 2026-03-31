@@ -20,17 +20,18 @@ export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props)
 
   return (
     <li style={{
-      display: 'flex', alignItems: 'flex-start', gap: 12,
-      padding: '12px 0', borderBottom: '1px solid var(--border)',
+      display: 'flex', alignItems: 'flex-start', gap: 10,
+      padding: '10px 0', borderBottom: '1px solid var(--border)',
     }}>
       <button
         onClick={() => isDoneToday ? onUnmarkDone(dever.id, occurrenceDate) : onMarkDone(dever.id, occurrenceDate)}
         style={{
-          width: 22, height: 22, minWidth: 22, borderRadius: 6,
-          border: isDoneToday ? '2px solid #22c55e' : '2px solid var(--border-input)',
-          background: isDoneToday ? '#22c55e' : 'var(--bg-check)',
-          color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          width: 20, height: 20, minWidth: 20, borderRadius: 'var(--radius-sm)',
+          border: isDoneToday ? '2px solid var(--progress-green)' : '2px solid var(--border-input)',
+          background: isDoneToday ? 'var(--progress-green)' : 'var(--bg-check)',
+          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2,
+          transition: 'all var(--transition)',
         }}
         aria-label={isDoneToday ? 'Desmarcar' : 'Marcar como feito'}
       >
@@ -38,16 +39,27 @@ export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props)
       </button>
 
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 500, textDecoration: isDoneToday ? 'line-through' : 'none', color: isDoneToday ? 'var(--text-done)' : 'var(--text)' }}>
+        <div style={{
+          fontWeight: 500, fontSize: 14, lineHeight: 1.4,
+          textDecoration: isDoneToday ? 'line-through' : 'none',
+          color: isDoneToday ? 'var(--text-done)' : 'var(--text)',
+          transition: 'color var(--transition)',
+        }}>
           {dever.title}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           <PriorityBadge priority={dever.priority} />
-          <span style={{ fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4 }}>
+          <span style={{
+            fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
+            padding: '1px 7px', borderRadius: 'var(--radius-xs)',
+          }}>
             {recurrenceLabel}
           </span>
           {dever.area && (
-            <span style={{ fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)', padding: '1px 6px', borderRadius: 4 }}>
+            <span style={{
+              fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
+              padding: '1px 7px', borderRadius: 'var(--radius-xs)',
+            }}>
               {dever.area}
             </span>
           )}
@@ -56,7 +68,11 @@ export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props)
 
       <button
         onClick={() => { if (confirm(`Arquivar "${dever.title}"?`)) onArchive(dever.id); }}
-        style={{ background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer', fontSize: 16, padding: '0 4px' }}
+        style={{
+          background: 'none', border: 'none', color: 'var(--border-input)', cursor: 'pointer',
+          fontSize: 14, padding: '4px 6px', borderRadius: 'var(--radius-xs)',
+          transition: 'color var(--transition)',
+        }}
         title="Arquivar dever"
         aria-label="Arquivar dever"
       >
@@ -74,7 +90,7 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
   };
   const labels = { high: 'alta', medium: 'média', low: 'baixa' };
   const c = vars[priority];
-  return <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '1px 6px', borderRadius: 4 }}>{labels[priority]}</span>;
+  return <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '1px 7px', borderRadius: 'var(--radius-xs)', fontWeight: 500 }}>{labels[priority]}</span>;
 }
 
 function formatRecurrence(config: import('@planner/core').RecurrenceConfig): string {
