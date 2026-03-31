@@ -1,6 +1,7 @@
 import {
   HabitArraySchema,
   DeverArraySchema,
+  ProjetoArraySchema,
   FoodArraySchema,
   DiaryEntryArraySchema,
   NutritionProfileSchema,
@@ -11,6 +12,8 @@ import {
   computeDailyTotals,
   computeDailyTargets,
   computePercentages,
+  computeProjetoProgress,
+  getNextEtapas,
   type DataAdapter,
   type Result,
   type TodaySnapshot,
@@ -21,6 +24,14 @@ import {
   type DeverBase,
   type DeverInput,
   type DeverId,
+  type Projeto,
+  type ProjetoInput,
+  type ProjetoPatch,
+  type EtapaInput,
+  type EtapaPatch,
+  type Etapa,
+  type ProjetoId,
+  type EtapaId,
   type ISODate,
   type Food,
   type FoodInput,
@@ -34,6 +45,7 @@ import {
 
 const HABITS_KEY = 'planner_habits';
 const DEVERES_KEY = 'planner_deveres';
+const PROJETOS_KEY = 'planner_projetos';
 const FOODS_KEY = 'planner_foods';
 const DIARY_KEY = 'planner_diary';
 const PROFILE_KEY = 'planner_nutrition_profile';
@@ -179,6 +191,156 @@ export class LocalStorageAdapter implements DataAdapter {
     const result = await this.updateDever(id, { active: false });
     if (!result.ok) return result;
     return ok(undefined);
+  }
+
+  // ── Projetos ──────────────────────────────────────────────────────────────────
+
+  async getProjetos(): Promise<Result<Projeto[]>> {
+    return ok(this.#readProjetos());
+  }
+
+  async createProjeto(input: ProjetoInput): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const createdAt = nowISODateTime();
+    const etapas: Etapa[] = (input.etapas ?? []).map((e, i) => ({
+      id: crypto.randomUUID() as EtapaId,
+      title: e.title,
+      ...(e.description !== undefined && { description: e.description }),
+      status: 'pending' as const,
+      order: e.order ?? i,
+      ...(e.deadline !== undefined && { deadline: e.deadline }),
+      ...(e.effortHours !== undefined && { effortHours: e.effortHours }),
+      ...(e.dependsOn !== undefined && { dependsOn: e.dependsOn }),
+      createdAt,
+    }));
+    const projeto: Projeto = {
+      id: crypto.randomUUID() as ProjetoId,
+      title: input.title,
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.area !== undefined && { area: input.area }),
+      priority: input.priority,
+      status: 'planning',
+      createdAt,
+      ...(input.inicio !== undefined && { inicio: input.inicio }),
+      ...(input.fim !== undefined && { fim: input.fim }),
+      etapas,
+    };
+    projetos.push(projeto);
+    this.#writeProjetos(projetos);
+    return ok(projeto);
+  }
+
+  async updateProjeto(id: ProjetoId, patch: ProjetoPatch): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const idx = projetos.findIndex((p) => p.id === id);
+    if (idx === -1) return err(`Projeto not found: ${id}`);
+    const current = projetos[idx]!;
+    const updated: Projeto = {
+      ...current,
+      ...(patch.title !== undefined && { title: patch.title }),
+      ...(patch.description !== undefined && { description: patch.description }),
+      ...(patch.area !== undefined && { area: patch.area }),
+      ...(patch.priority !== undefined && { priority: patch.priority }),
+      ...(patch.status !== undefined && { status: patch.status }),
+      ...(patch.inicio !== undefined && { inicio: patch.inicio }),
+      ...(patch.fim !== undefined && { fim: patch.fim }),
+    };
+    projetos[idx] = updated;
+    this.#writeProjetos(projetos);
+    return ok(updated);
+  }
+
+  async archiveProjeto(id: ProjetoId): Promise<Result<void>> {
+    const result = await this.updateProjeto(id, { status: 'archived' });
+    if (!result.ok) return result;
+    return ok(undefined);
+  }
+
+  async addEtapa(projetoId: ProjetoId, input: EtapaInput): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const idx = projetos.findIndex((p) => p.id === projetoId);
+    if (idx === -1) return err(`Projeto not found: ${projetoId}`);
+    const projeto = projetos[idx]!;
+    const maxOrder = projeto.etapas.length > 0
+      ? Math.max(...projeto.etapas.map((e) => e.order))
+      : -1;
+    const etapa: Etapa = {
+      id: crypto.randomUUID() as EtapaId,
+      title: input.title,
+      ...(input.description !== undefined && { description: input.description }),
+      status: 'pending',
+      order: input.order ?? maxOrder + 1,
+      ...(input.deadline !== undefined && { deadline: input.deadline }),
+      ...(input.effortHours !== undefined && { effortHours: input.effortHours }),
+      ...(input.dependsOn !== undefined && { dependsOn: input.dependsOn }),
+      createdAt: nowISODateTime(),
+    };
+    projeto.etapas.push(etapa);
+    this.#writeProjetos(projetos);
+    return ok(projeto);
+  }
+
+  async updateEtapa(projetoId: ProjetoId, etapaId: EtapaId, patch: EtapaPatch): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const pIdx = projetos.findIndex((p) => p.id === projetoId);
+    if (pIdx === -1) return err(`Projeto not found: ${projetoId}`);
+    const projeto = projetos[pIdx]!;
+    const eIdx = projeto.etapas.findIndex((e) => e.id === etapaId);
+    if (eIdx === -1) return err(`Etapa not found: ${etapaId}`);
+    const current = projeto.etapas[eIdx]!;
+    const updated: Etapa = {
+      ...current,
+      ...(patch.title !== undefined && { title: patch.title }),
+      ...(patch.description !== undefined && { description: patch.description }),
+      ...(patch.status !== undefined && { status: patch.status }),
+      ...(patch.deadline !== undefined && { deadline: patch.deadline }),
+      ...(patch.effortHours !== undefined && { effortHours: patch.effortHours }),
+      ...(patch.order !== undefined && { order: patch.order }),
+      ...(patch.dependsOn !== undefined && { dependsOn: patch.dependsOn }),
+    };
+    // Set completedAt when transitioning to done
+    if (patch.status === 'done' && current.status !== 'done') {
+      updated.completedAt = nowISODateTime();
+    }
+    // Clear completedAt when transitioning away from done
+    if (patch.status !== undefined && patch.status !== 'done' && current.status === 'done') {
+      delete (updated as unknown as Record<string, unknown>)['completedAt'];
+    }
+    projeto.etapas[eIdx] = updated;
+    this.#writeProjetos(projetos);
+    return ok(projeto);
+  }
+
+  async removeEtapa(projetoId: ProjetoId, etapaId: EtapaId): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const pIdx = projetos.findIndex((p) => p.id === projetoId);
+    if (pIdx === -1) return err(`Projeto not found: ${projetoId}`);
+    const projeto = projetos[pIdx]!;
+    projeto.etapas = projeto.etapas.filter((e) => e.id !== etapaId);
+    // Also remove from dependsOn of other etapas
+    for (const e of projeto.etapas) {
+      if (e.dependsOn) {
+        e.dependsOn = e.dependsOn.filter((id) => id !== etapaId) as EtapaId[];
+        if (e.dependsOn.length === 0) {
+          delete (e as unknown as Record<string, unknown>)['dependsOn'];
+        }
+      }
+    }
+    this.#writeProjetos(projetos);
+    return ok(projeto);
+  }
+
+  async reorderEtapas(projetoId: ProjetoId, etapaIds: EtapaId[]): Promise<Result<Projeto>> {
+    const projetos = this.#readProjetos();
+    const pIdx = projetos.findIndex((p) => p.id === projetoId);
+    if (pIdx === -1) return err(`Projeto not found: ${projetoId}`);
+    const projeto = projetos[pIdx]!;
+    for (let i = 0; i < etapaIds.length; i++) {
+      const etapa = projeto.etapas.find((e) => e.id === etapaIds[i]);
+      if (etapa) etapa.order = i;
+    }
+    this.#writeProjetos(projetos);
+    return ok(projeto);
   }
 
   // ── Foods ───────────────────────────────────────────────────────────────────
@@ -380,10 +542,21 @@ export class LocalStorageAdapter implements DataAdapter {
       };
     }
 
+    // Projetos: active projects with progress and next etapas
+    const allProjetos = this.#readProjetos();
+    const projetoItems: TodaySnapshot['projetos'] = allProjetos
+      .filter((p) => p.status === 'active')
+      .map((projeto) => ({
+        projeto,
+        progress: computeProjetoProgress(projeto),
+        nextEtapas: getNextEtapas(projeto),
+      }));
+
     return ok({
       date,
       habits: habitItems,
       deveres: deverItems,
+      projetos: projetoItems,
       ...(nutritionSummary && { nutritionSummary }),
     });
   }
@@ -432,6 +605,23 @@ export class LocalStorageAdapter implements DataAdapter {
 
   #writeDeveres(deveres: Dever[]): void {
     localStorage.setItem(DEVERES_KEY, JSON.stringify(deveres));
+  }
+
+  // ── Private: Projetos ──────────────────────────────────────────────────────
+
+  #readProjetos(): Projeto[] {
+    const raw = localStorage.getItem(PROJETOS_KEY);
+    if (!raw) return [];
+    try {
+      return ProjetoArraySchema.parse(JSON.parse(raw)) as unknown as Projeto[];
+    } catch (e) {
+      console.error(`[LocalStorageAdapter] Invalid data in "${PROJETOS_KEY}", falling back to []:`, e);
+      return [];
+    }
+  }
+
+  #writeProjetos(projetos: Projeto[]): void {
+    localStorage.setItem(PROJETOS_KEY, JSON.stringify(projetos));
   }
 
   // ── Private: Foods ──────────────────────────────────────────────────────────

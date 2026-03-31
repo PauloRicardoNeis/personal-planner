@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { HojePage } from './pages/HojePage.js';
 import { HabitsPage } from './pages/HabitsPage.js';
 import { DeveresPage } from './pages/DeveresPage.js';
+import { ProjetosPage } from './pages/ProjetosPage.js';
 import { NutritionPage } from './pages/NutritionPage.js';
 import { FoodsPage } from './pages/FoodsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Hoje',      icon: '◎', end: true  },
   { to: '/habitos',  label: 'Hábitos',  icon: '✦', end: false },
   { to: '/deveres',    label: 'Deveres',    icon: '◻', end: false },
+  { to: '/projetos',   label: 'Projetos',   icon: '▣', end: false },
   { to: '/calendario', label: 'Calendário', icon: '▦', end: false },
   { to: '/nutricao',   label: 'Nutrição',   icon: '◈', end: false },
   { to: '/alimentos',label: 'Alimentos',icon: '◇', end: false },
@@ -129,6 +131,7 @@ export function App() {
             <Route path="/" element={<HojePage />} />
             <Route path="/habitos"   element={<PageWrapper><HabitsPage /></PageWrapper>} />
             <Route path="/deveres"    element={<PageWrapper><DeveresPage /></PageWrapper>} />
+            <Route path="/projetos"   element={<PageWrapper><ProjetosPage /></PageWrapper>} />
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/nutricao"   element={<PageWrapper><NutritionPage /></PageWrapper>} />
             <Route path="/alimentos" element={<PageWrapper><FoodsPage /></PageWrapper>} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type RecurrenceConfig, type WeekdayName, type ISODate, type ISODateTime } from '@planner/core';
+import { type RecurrenceConfig, type WeekdayName, type ISODate, type ISODateTime, todayISODate } from '@planner/core';
 import { useDeveres } from '../hooks/useDeveres.js';
 import { DeverList } from '../components/deveres/DeverList.js';
 
@@ -35,12 +35,13 @@ export function DeveresPage() {
 
     const areaVal = area.trim();
     const areaOpt = areaVal ? { area: areaVal } : {};
-    const inicioOpt = inicio ? { inicio: inicio as ISODateTime } : {};
+    // datetime-local returns "YYYY-MM-DDTHH:mm" — convert to full ISO 8601
+    const inicioOpt = inicio ? { inicio: new Date(inicio).toISOString() as ISODateTime } : {};
     const fimOpt = fim ? { fim: fim as ISODate } : {};
 
     if (type === 'once') {
-      if (!fim) { alert('Informe o fim (prazo) do dever.'); return; }
-      await createDever({ type: 'once', title: title.trim(), fim: fim as ISODate, ...inicioOpt, ...areaOpt, priority });
+      const fimVal = fim ? (fim as ISODate) : todayISODate();
+      await createDever({ type: 'once', title: title.trim(), fim: fimVal, ...inicioOpt, ...areaOpt, priority });
     } else {
       let recurrence: RecurrenceConfig;
       if (recurrenceType === 'daily') {
@@ -96,8 +97,8 @@ export function DeveresPage() {
           </div>
           {type === 'once' && (
             <div>
-              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (prazo):</label>
-              <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} required style={inputStyle} />
+              <label style={{ fontSize: 13, color: 'var(--label)', marginRight: 8 }}>Fim (padrão: hoje):</label>
+              <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
             </div>
           )}
           {type === 'cyclic' && (

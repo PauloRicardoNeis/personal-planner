@@ -11,6 +11,8 @@ export type ISODateTime = string & { readonly __brand: 'ISODateTime' };
 /** Branded ID types — prevents mixing IDs at compile time */
 export type HabitId = string & { readonly __brand: 'HabitId' };
 export type DeverId = string & { readonly __brand: 'DeverId' };
+export type ProjetoId = string & { readonly __brand: 'ProjetoId' };
+export type EtapaId = string & { readonly __brand: 'EtapaId' };
 export type FoodId = string & { readonly __brand: 'FoodId' };
 export type DiaryEntryId = string & { readonly __brand: 'DiaryEntryId' };
 

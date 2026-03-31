@@ -4,6 +4,8 @@ export type {
   ISODateTime,
   HabitId,
   DeverId,
+  ProjetoId,
+  EtapaId,
   FoodId,
   DiaryEntryId,
   WeekdayName,
@@ -40,6 +42,18 @@ export type {
 export { OnceDeverSchema, CyclicDeverSchema, DeverSchema, DeverArraySchema } from './models/dever.js';
 
 export type {
+  Etapa,
+  EtapaInput,
+  EtapaPatch,
+  EtapaStatus,
+  Projeto,
+  ProjetoInput,
+  ProjetoPatch,
+  ProjetoStatus,
+} from './models/projeto.js';
+export { EtapaSchema, ProjetoSchema, ProjetoArraySchema } from './models/projeto.js';
+
+export type {
   NutrientsPer100g,
   Food,
   FoodInput,
@@ -68,6 +82,16 @@ export type { Result, TodaySnapshot, DataAdapter } from './contracts/DataAdapter
 
 // ── Domain ────────────────────────────────────────────────────────────────────
 export { isOccurrenceOn } from './domain/recurrence.js';
+
+export type { ProjetoProgress, ProjetoEffort } from './domain/projeto.js';
+export {
+  computeProjetoProgress,
+  computeProjetoEffort,
+  getBlockedEtapas,
+  getNextEtapas,
+  canTransitionEtapa,
+  wouldCreateCycle,
+} from './domain/projeto.js';
 
 export type { HabitStreakInfo } from './domain/streaks.js';
 export { computeStreaks } from './domain/streaks.js';

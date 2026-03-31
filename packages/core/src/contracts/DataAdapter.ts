@@ -1,8 +1,10 @@
 import type { Habit, HabitInput } from '../models/habit.js';
 import type { Dever, DeverBase, DeverInput } from '../models/dever.js';
-import type { HabitId, DeverId, ISODate, FoodId, DiaryEntryId } from '../models/shared.js';
+import type { Projeto, ProjetoInput, ProjetoPatch, EtapaInput, EtapaPatch } from '../models/projeto.js';
+import type { HabitId, DeverId, ProjetoId, EtapaId, ISODate, FoodId, DiaryEntryId } from '../models/shared.js';
 import type { Food, FoodInput, DiaryEntry, DiaryEntryInput, NutritionProfile, DailyNutritionSummary } from '../models/nutrition.js';
 import type { HabitStreakInfo } from '../domain/streaks.js';
+import type { ProjetoProgress } from '../domain/projeto.js';
 
 // ── Result type ───────────────────────────────────────────────────────────────
 
@@ -34,6 +36,14 @@ export interface TodaySnapshot {
     /** true when occurrenceDate < date — only possible for OnceDever */
     isOverdue: boolean;
   }>;
+
+  /** Active projects with progress and next actionable etapas */
+  projetos: Array<{
+    projeto: Projeto;
+    progress: ProjetoProgress;
+    nextEtapas: import('../models/projeto.js').Etapa[];
+  }>;
+
   nutritionSummary?: {
     calories: number;
     caloriesTarget: number;
@@ -119,6 +129,32 @@ export interface DataAdapter {
 
   /** Soft-deletes a dever (sets active: false). */
   archiveDever(id: DeverId): Promise<Result<void>>;
+
+  // ── Projetos ──────────────────────────────────────────────────────────────────
+
+  /** Returns all projetos, including archived ones */
+  getProjetos(): Promise<Result<Projeto[]>>;
+
+  /** Creates a new projeto. ID and createdAt are assigned by the adapter. */
+  createProjeto(input: ProjetoInput): Promise<Result<Projeto>>;
+
+  /** Updates mutable projeto fields (not etapas). */
+  updateProjeto(id: ProjetoId, patch: ProjetoPatch): Promise<Result<Projeto>>;
+
+  /** Sets status to 'archived'. */
+  archiveProjeto(id: ProjetoId): Promise<Result<void>>;
+
+  /** Adds a new etapa to a projeto. Returns the updated projeto. */
+  addEtapa(projetoId: ProjetoId, input: EtapaInput): Promise<Result<Projeto>>;
+
+  /** Updates an etapa within a projeto. Returns the updated projeto. */
+  updateEtapa(projetoId: ProjetoId, etapaId: EtapaId, patch: EtapaPatch): Promise<Result<Projeto>>;
+
+  /** Removes an etapa from a projeto. Returns the updated projeto. */
+  removeEtapa(projetoId: ProjetoId, etapaId: EtapaId): Promise<Result<Projeto>>;
+
+  /** Reorders etapas by providing the full ordered list of IDs. */
+  reorderEtapas(projetoId: ProjetoId, etapaIds: EtapaId[]): Promise<Result<Projeto>>;
 
   // ── Foods ───────────────────────────────────────────────────────────────────
 

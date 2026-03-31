@@ -11,6 +11,13 @@ import {
   DeverBase,
   DeverInput,
   DeverId,
+  Projeto,
+  ProjetoInput,
+  ProjetoPatch,
+  EtapaInput,
+  EtapaPatch,
+  ProjetoId,
+  EtapaId,
   ISODate,
   Food,
   FoodInput,
@@ -86,6 +93,40 @@ export class RestApiAdapter implements DataAdapter {
 
   archiveDever(id: DeverId): Promise<Result<void>> {
     return this.#call('POST', `/deveres/${id}/archive`);
+  }
+
+  // ── Projetos ──────────────────────────────────────────────────────────────────
+
+  getProjetos(): Promise<Result<Projeto[]>> {
+    return this.#call('GET', '/projetos');
+  }
+
+  createProjeto(input: ProjetoInput): Promise<Result<Projeto>> {
+    return this.#call('POST', '/projetos', input);
+  }
+
+  updateProjeto(id: ProjetoId, patch: ProjetoPatch): Promise<Result<Projeto>> {
+    return this.#call('PATCH', `/projetos/${id}`, patch);
+  }
+
+  archiveProjeto(id: ProjetoId): Promise<Result<void>> {
+    return this.#call('POST', `/projetos/${id}/archive`);
+  }
+
+  addEtapa(projetoId: ProjetoId, input: EtapaInput): Promise<Result<Projeto>> {
+    return this.#call('POST', `/projetos/${projetoId}/etapas`, input);
+  }
+
+  updateEtapa(projetoId: ProjetoId, etapaId: EtapaId, patch: EtapaPatch): Promise<Result<Projeto>> {
+    return this.#call('PATCH', `/projetos/${projetoId}/etapas/${etapaId}`, patch);
+  }
+
+  removeEtapa(projetoId: ProjetoId, etapaId: EtapaId): Promise<Result<Projeto>> {
+    return this.#call('DELETE', `/projetos/${projetoId}/etapas/${etapaId}`);
+  }
+
+  reorderEtapas(projetoId: ProjetoId, etapaIds: EtapaId[]): Promise<Result<Projeto>> {
+    return this.#call('PUT', `/projetos/${projetoId}/etapas/order`, { etapaIds });
   }
 
   // ── Foods ───────────────────────────────────────────────────────────────────

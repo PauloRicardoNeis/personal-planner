@@ -65,6 +65,14 @@ export function HojePage() {
       value: deveresPending === 0 ? 'Em dia ✓' : `${deveresPending} pendente${deveresPending > 1 ? 's' : ''}`,
       link: '/deveres',
     },
+    ...(snapshot.projetos.length > 0
+      ? [{
+          icon: '📂',
+          label: 'Projetos',
+          value: `${snapshot.projetos.length} ativo${snapshot.projetos.length > 1 ? 's' : ''}`,
+          link: '/projetos',
+        }]
+      : []),
     ...(ns
       ? [{
           icon: '🔥',
@@ -82,6 +90,7 @@ export function HojePage() {
   const quickActions = [
     { label: '+ Hábito',  to: '/habitos'  },
     { label: '+ Tarefa',  to: '/deveres'  },
+    { label: '+ Projeto', to: '/projetos' },
     { label: '+ Refeição',to: '/nutricao' },
   ];
 
