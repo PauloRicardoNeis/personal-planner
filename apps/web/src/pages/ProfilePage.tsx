@@ -109,7 +109,7 @@ export function ProfilePage() {
             </thead>
             <tbody>
               <tr><td style={tdStyle}>Calorias</td><td style={tdRightStyle}>{Math.round(targets.calories)} kcal</td></tr>
-              <tr><td style={tdStyle}>Proteina</td><td style={tdRightStyle}>{Math.round(targets.protein)} g</td></tr>
+              <tr><td style={tdStyle}>Proteína</td><td style={tdRightStyle}>{Math.round(targets.protein)} g</td></tr>
               <tr><td style={tdStyle}>Carboidratos</td><td style={tdRightStyle}>{Math.round(targets.carbs)} g</td></tr>
               <tr><td style={tdStyle}>Gordura</td><td style={tdRightStyle}>{Math.round(targets.fat)} g</td></tr>
               <tr><td style={tdStyle}>Fibra</td><td style={tdRightStyle}>{Math.round(targets.fiber)} g</td></tr>

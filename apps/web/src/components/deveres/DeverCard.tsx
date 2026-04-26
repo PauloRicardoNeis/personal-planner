@@ -1,4 +1,5 @@
 import { todayISODate, type Dever, type DeverId, type ISODate } from '@planner/core';
+import { getDeverMetaLabels, getDeverOccurrenceDateForList } from '../../deverPresentation.js';
 
 interface Props {
   dever: Dever;
@@ -9,14 +10,9 @@ interface Props {
 
 export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props) {
   const today = todayISODate();
-  const isDoneToday = dever.completions.some((c) => c.occurrenceDate === today);
-
-  const occurrenceDate: ISODate = dever.type === 'once' ? dever.fim : today;
-
-  const recurrenceLabel =
-    dever.type === 'once'
-      ? `prazo: ${dever.fim}`
-      : formatRecurrence(dever.recurrence);
+  const occurrenceDate: ISODate = getDeverOccurrenceDateForList(dever, today);
+  const isDoneToday = dever.completions.some((c) => c.occurrenceDate === occurrenceDate);
+  const metaLabels = getDeverMetaLabels(dever);
 
   return (
     <li style={{
@@ -49,12 +45,17 @@ export function DeverCard({ dever, onMarkDone, onUnmarkDone, onArchive }: Props)
         </div>
         <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
           <PriorityBadge priority={dever.priority} />
-          <span style={{
-            fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
-            padding: '1px 7px', borderRadius: 'var(--radius-xs)',
-          }}>
-            {recurrenceLabel}
-          </span>
+          {metaLabels.map((label) => (
+            <span
+              key={label}
+              style={{
+                fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
+                padding: '1px 7px', borderRadius: 'var(--radius-xs)',
+              }}
+            >
+              {label}
+            </span>
+          ))}
           {dever.area && (
             <span style={{
               fontSize: 11, color: 'var(--text-badge)', background: 'var(--bg-badge)',
@@ -91,13 +92,4 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
   const labels = { high: 'alta', medium: 'média', low: 'baixa' };
   const c = vars[priority];
   return <span style={{ fontSize: 11, color: c.text, background: c.bg, padding: '1px 7px', borderRadius: 'var(--radius-xs)', fontWeight: 500 }}>{labels[priority]}</span>;
-}
-
-function formatRecurrence(config: import('@planner/core').RecurrenceConfig): string {
-  if (config.type === 'daily') return 'diário';
-  if (config.type === 'weekly') {
-    const days = { monday: 'seg', tuesday: 'ter', wednesday: 'qua', thursday: 'qui', friday: 'sex', saturday: 'sáb', sunday: 'dom' };
-    return `semanal: ${config.weekdays.map((d) => days[d]).join(', ')}`;
-  }
-  return `mensal: dia ${config.monthDay}`;
 }

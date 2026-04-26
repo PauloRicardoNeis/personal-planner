@@ -194,14 +194,14 @@ export function FoodsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input type="text" placeholder="Descricao da porcao (opcional)" value={servingDesc} onChange={(e) => setServingDesc(e.target.value)} style={{ ...inputStyle, flex: 2, minWidth: 180 }} />
-          <input type="number" placeholder="Gramas da porcao" value={servingGrams} onChange={(e) => setServingGrams(e.target.value)} min={1} style={{ ...inputStyle, flex: 1, minWidth: 100 }} />
+          <input type="text" placeholder="Descrição da porção (opcional)" value={servingDesc} onChange={(e) => setServingDesc(e.target.value)} style={{ ...inputStyle, flex: 2, minWidth: 180 }} />
+          <input type="number" placeholder="Gramas da porção" value={servingGrams} onChange={(e) => setServingGrams(e.target.value)} min={1} style={{ ...inputStyle, flex: 1, minWidth: 100 }} />
         </div>
 
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0', fontWeight: 500 }}>Nutrientes por 100g (obrigatorios):</p>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0', fontWeight: 500 }}>Nutrientes por 100g (obrigatórios):</p>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <input type="number" placeholder="Calorias *" value={calories} onChange={(e) => setCalories(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
-          <input type="number" placeholder="Proteina *" value={protein} onChange={(e) => setProtein(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
+          <input type="number" placeholder="Proteína *" value={protein} onChange={(e) => setProtein(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
           <input type="number" placeholder="Carbs *" value={carbs} onChange={(e) => setCarbs(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
           <input type="number" placeholder="Gordura *" value={fat} onChange={(e) => setFat(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
           <input type="number" placeholder="Fibra *" value={fiber} onChange={(e) => setFiber(e.target.value)} required step="any" style={{ ...inputStyle, maxWidth: 105 }} />
@@ -326,7 +326,7 @@ export function FoodsPage() {
 function NutrientTable({ nutrients }: { nutrients: NutrientsPer100g }) {
   const rows: Array<{ label: string; value: number | undefined; unit: string }> = [
     { label: 'Calorias', value: nutrients.calories, unit: 'kcal' },
-    { label: 'Proteina', value: nutrients.protein, unit: 'g' },
+    { label: 'Proteína', value: nutrients.protein, unit: 'g' },
     { label: 'Carboidratos', value: nutrients.carbs, unit: 'g' },
     { label: 'Gordura', value: nutrients.fat, unit: 'g' },
     { label: 'Fibra', value: nutrients.fiber, unit: 'g' },

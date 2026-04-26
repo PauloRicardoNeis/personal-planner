@@ -97,7 +97,7 @@ export function NutritionPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Nutricao</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, letterSpacing: '-0.3px', color: 'var(--text)' }}>Nutrição</h1>
 
       {/* Date selector */}
       <div style={{ marginBottom: 24 }}>
@@ -129,7 +129,7 @@ export function NutritionPage() {
             isProtein={false}
           />
           <MacroBar
-            label="Proteina"
+            label="Proteína"
             current={summaryState.summary.totals.protein}
             target={summaryState.summary.targets.protein}
             percent={summaryState.summary.percentages.protein}
@@ -221,7 +221,7 @@ export function NutritionPage() {
               <>
                 <input
                   type="text"
-                  placeholder="Descricao"
+                  placeholder="Descrição"
                   value={quickDesc}
                   onChange={(e) => setQuickDesc(e.target.value)}
                   required
@@ -239,7 +239,7 @@ export function NutritionPage() {
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Nutrientes por 100g:</p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <input type="number" placeholder="Calorias" value={quickCalories} onChange={(e) => setQuickCalories(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
-                  <input type="number" placeholder="Proteina" value={quickProtein} onChange={(e) => setQuickProtein(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
+                  <input type="number" placeholder="Proteína" value={quickProtein} onChange={(e) => setQuickProtein(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
                   <input type="number" placeholder="Carbs" value={quickCarbs} onChange={(e) => setQuickCarbs(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
                   <input type="number" placeholder="Gordura" value={quickFat} onChange={(e) => setQuickFat(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
                   <input type="number" placeholder="Fibra" value={quickFiber} onChange={(e) => setQuickFiber(e.target.value)} style={{ ...inputStyle, maxWidth: 100 }} />
@@ -249,7 +249,7 @@ export function NutritionPage() {
 
             <input
               type="text"
-              placeholder="Refeicao (opcional)"
+              placeholder="Refeição (opcional)"
               value={meal}
               onChange={(e) => setMeal(e.target.value)}
               style={{ ...inputStyle, maxWidth: 200 }}
@@ -290,7 +290,7 @@ function DiaryList({ entries, foodMap, onDelete }: {
   // Group by meal
   const groups = new Map<string, typeof entries>();
   for (const entry of entries) {
-    const key = entry.meal ?? 'Sem refeicao';
+    const key = entry.meal ?? 'Sem refeição';
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(entry);
   }

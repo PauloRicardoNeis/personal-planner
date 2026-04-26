@@ -15,6 +15,13 @@ export type ProjetoId = string & { readonly __brand: 'ProjetoId' };
 export type EtapaId = string & { readonly __brand: 'EtapaId' };
 export type FoodId = string & { readonly __brand: 'FoodId' };
 export type DiaryEntryId = string & { readonly __brand: 'DiaryEntryId' };
+export type GameId = string & { readonly __brand: 'GameId' };
+export type BookId = string & { readonly __brand: 'BookId' };
+export type MovieId = string & { readonly __brand: 'MovieId' };
+export type SaudeItemId = string & { readonly __brand: 'SaudeItemId' };
+export type SaudeEventId = string & { readonly __brand: 'SaudeEventId' };
+export type ListaCompraId = string & { readonly __brand: 'ListaCompraId' };
+export type CompraItemId = string & { readonly __brand: 'CompraItemId' };
 
 // ── Recurrence ────────────────────────────────────────────────────────────────
 
@@ -39,6 +46,8 @@ export type MonthlyRecurrence = {
   type: 'monthly';
   /** Day of month 1–31. If the month doesn't have this day, occurrence is skipped silently. */
   monthDay: number;
+  /** Optional end day of the active window. When set, the dever is active from monthDay to monthDayEnd. */
+  monthDayEnd?: number;
 };
 
 export type RecurrenceConfig =
@@ -81,6 +90,7 @@ export const WeeklyRecurrenceSchema = z.object({
 export const MonthlyRecurrenceSchema = z.object({
   type: z.literal('monthly'),
   monthDay: z.number().int().min(1).max(31),
+  monthDayEnd: z.number().int().min(1).max(31).optional(),
 });
 
 export const RecurrenceConfigSchema = z.discriminatedUnion('type', [

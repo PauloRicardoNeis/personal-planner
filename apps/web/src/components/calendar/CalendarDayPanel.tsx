@@ -1,5 +1,6 @@
 import type { DeverId, ISODate } from '@planner/core';
 import type { DayEntry } from '../../hooks/useCalendar.js';
+import { getDeverMetaLabels } from '../../deverPresentation.js';
 
 interface Props {
   date: ISODate;
@@ -62,7 +63,6 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
       flexDirection: 'column',
       overflow: 'hidden',
     }}>
-      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -99,7 +99,6 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
         </button>
       </div>
 
-      {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 18px' }}>
         {entry.deveres.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 16 }}>
@@ -107,53 +106,71 @@ export function CalendarDayPanel({ date, entry, onMarkDone, onUnmarkDone, onClos
           </p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {entry.deveres.map(({ dever, isDone }) => (
-              <li
-                key={dever.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  padding: '9px 0',
-                  borderBottom: '1px solid var(--border)',
-                }}
-              >
-                <button
-                  onClick={() =>
-                    isDone ? onUnmarkDone(dever.id, date) : onMarkDone(dever.id, date)
-                  }
-                  style={checkStyle(isDone)}
-                  aria-label={isDone ? 'Desmarcar' : 'Marcar como feito'}
+            {entry.deveres.map(({ dever, isDone }) => {
+              const metaLabels = getDeverMetaLabels(dever);
+
+              return (
+                <li
+                  key={dever.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    padding: '9px 0',
+                    borderBottom: '1px solid var(--border)',
+                  }}
                 >
-                  {isDone ? '✓' : ''}
-                </button>
-                <div style={{ flex: 1 }}>
-                  <span style={{
-                    textDecoration: isDone ? 'line-through' : 'none',
-                    color: isDone ? 'var(--text-done)' : 'var(--text)',
-                    fontSize: 13.5,
-                    lineHeight: 1.4,
-                    transition: 'color var(--transition)',
-                  }}>
-                    {dever.title}
-                  </span>
-                  <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-                    <PriorityBadge priority={dever.priority} />
-                    {dever.area && (
-                      <span style={{
-                        fontSize: 11,
-                        color: 'var(--text-badge)',
-                        background: 'var(--bg-badge)',
-                        padding: '1px 6px',
-                        borderRadius: 'var(--radius-xs)',
-                      }}>
-                        {dever.area}
-                      </span>
-                    )}
+                  <button
+                    onClick={() =>
+                      isDone ? onUnmarkDone(dever.id, date) : onMarkDone(dever.id, date)
+                    }
+                    style={checkStyle(isDone)}
+                    aria-label={isDone ? 'Desmarcar' : 'Marcar como feito'}
+                  >
+                    {isDone ? '✓' : ''}
+                  </button>
+                  <div style={{ flex: 1 }}>
+                    <span style={{
+                      textDecoration: isDone ? 'line-through' : 'none',
+                      color: isDone ? 'var(--text-done)' : 'var(--text)',
+                      fontSize: 13.5,
+                      lineHeight: 1.4,
+                      transition: 'color var(--transition)',
+                    }}>
+                      {dever.title}
+                    </span>
+                    <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+                      <PriorityBadge priority={dever.priority} />
+                      {metaLabels.map((label) => (
+                        <span
+                          key={label}
+                          style={{
+                            fontSize: 11,
+                            color: 'var(--text-badge)',
+                            background: 'var(--bg-badge)',
+                            padding: '1px 6px',
+                            borderRadius: 'var(--radius-xs)',
+                          }}
+                        >
+                          {label}
+                        </span>
+                      ))}
+                      {dever.area && (
+                        <span style={{
+                          fontSize: 11,
+                          color: 'var(--text-badge)',
+                          background: 'var(--bg-badge)',
+                          padding: '1px 6px',
+                          borderRadius: 'var(--radius-xs)',
+                        }}>
+                          {dever.area}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

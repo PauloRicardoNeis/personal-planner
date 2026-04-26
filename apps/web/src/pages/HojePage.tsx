@@ -50,7 +50,7 @@ export function HojePage() {
   const deveresPending = snapshot.deveres.filter((d) => !d.isDone).length;
   const ns = snapshot.nutritionSummary;
 
-  // ── Summary cards ─────────────────────────────────────────────────────────
+  // Summary cards
   const summaryCards: (DashboardCardProps & { icon: string })[] = [
     {
       icon: '🌿',
@@ -86,7 +86,7 @@ export function HojePage() {
       : []),
   ];
 
-  // ── Quick actions ──────────────────────────────────────────────────────────
+  // Quick actions
   const quickActions = [
     { label: '+ Hábito',  to: '/habitos'  },
     { label: '+ Tarefa',  to: '/deveres'  },
@@ -97,7 +97,7 @@ export function HojePage() {
   return (
     <div style={{ padding: '36px 44px', maxWidth: 960 }}>
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div style={{ marginBottom: 36 }}>
         <h1 style={{
           fontWeight: 700,
@@ -114,7 +114,7 @@ export function HojePage() {
         </p>
       </div>
 
-      {/* ── Summary cards grid ────────────────────────────────────────────── */}
+      {/* Summary cards grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
@@ -126,7 +126,7 @@ export function HojePage() {
         ))}
       </div>
 
-      {/* ── Quick actions ─────────────────────────────────────────────────── */}
+      {/* Quick actions */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 40 }}>
         {quickActions.map((action) => (
           <button
@@ -159,7 +159,7 @@ export function HojePage() {
         ))}
       </div>
 
-      {/* ── Detailed view ─────────────────────────────────────────────────── */}
+      {/* Detailed view */}
       <HojeView
         snapshot={snapshot}
         onToggleHabit={handleToggleHabit}

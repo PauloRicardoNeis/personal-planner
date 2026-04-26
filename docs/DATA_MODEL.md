@@ -21,6 +21,7 @@ type HabitId = string & { readonly __brand: 'HabitId' };
 type DeverId = string & { readonly __brand: 'DeverId' };
 type FoodId = string & { readonly __brand: 'FoodId' };
 type DiaryEntryId = string & { readonly __brand: 'DiaryEntryId' };
+type GameId = string & { readonly __brand: 'GameId' };
 ```
 
 ## RecurrenceConfig
@@ -197,6 +198,30 @@ interface DailyTargets {
 }
 ```
 
+## Game
+
+Biblioteca importada da Steam no MVP.
+
+```typescript
+interface Game {
+  id: GameId;                  // "steam:<appid>"
+  source: 'steam';
+  steamAppId: number;
+  name: string;
+  playtimeMinutes: number;
+  iconHash?: string;
+  logoHash?: string;
+  lastImportedAt: ISODateTime;
+}
+
+interface SteamLibrarySettings {
+  apiKey: string;
+  profile: string;             // SteamID64, vanity URL ou URL completa
+  resolvedSteamId?: string;
+  lastSyncedAt?: ISODateTime;
+}
+```
+
 ## TodaySnapshot
 
 Montado pelo adapter em `getTodaySnapshot(date)`. A lógica de recorrência fica no adapter, não na UI.
@@ -243,6 +268,8 @@ interface TodaySnapshot {
 | `planner_foods` | `Food[]` | Array JSON de todos os alimentos |
 | `planner_diary` | `DiaryEntry[]` | Array JSON de todas as entradas do diário |
 | `planner_nutrition_profile` | `NutritionProfile` | Perfil nutricional (peso + objetivo) |
+| `planner_games` | `Game[]` | Biblioteca importada da Steam |
+| `planner_steam_settings` | `SteamLibrarySettings` | Chave e perfil usados na sincronizaÃ§Ã£o da Steam |
 
 Toda leitura é validada com os schemas Zod correspondentes.
 
@@ -255,6 +282,8 @@ Toda leitura é validada com os schemas Zod correspondentes.
 | `foods` | `id TEXT PK, data TEXT` | JSON blob por alimento |
 | `diary_entries` | `id TEXT PK, data TEXT` | JSON blob por entrada |
 | `nutrition_profile` | `id TEXT PK, data TEXT` | JSON blob (id='default') |
+| `games` | `id TEXT PK, data TEXT` | JSON blob por jogo importado |
+| `steam_library_settings` | `id TEXT PK, data TEXT` | JSON blob (id='default') com config da Steam |
 
 ## Schemas Zod
 
@@ -266,5 +295,6 @@ Os schemas Zod são co-localizados com as interfaces TypeScript:
 - `FoodSchema`, `FoodArraySchema` em `packages/core/src/models/nutrition.ts`
 - `DiaryEntrySchema` (discriminated union food|quick), `DiaryEntryArraySchema` em `packages/core/src/models/nutrition.ts`
 - `NutritionProfileSchema` em `packages/core/src/models/nutrition.ts`
+- `GameSchema`, `GameArraySchema`, `SteamLibrarySettingsSchema` em `packages/core/src/models/game.ts`
 
 Ao adicionar um campo à interface, adicione ao schema correspondente no mesmo arquivo.

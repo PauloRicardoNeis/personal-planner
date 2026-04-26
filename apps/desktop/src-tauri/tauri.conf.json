@@ -22,7 +22,6 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "createUpdaterArtifacts": true,
     "externalBin": []
   },
   "plugins": {

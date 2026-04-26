@@ -28,6 +28,7 @@ export function DeveresPage() {
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
   const [weekdays, setWeekdays] = useState<WeekdayName[]>([]);
   const [monthDay, setMonthDay] = useState(1);
+  const [monthDayEnd, setMonthDayEnd] = useState<number | ''>('');
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -40,8 +41,8 @@ export function DeveresPage() {
     const fimOpt = fim ? { fim: fim as ISODate } : {};
 
     if (type === 'once') {
-      const fimVal = fim ? (fim as ISODate) : todayISODate();
-      await createDever({ type: 'once', title: title.trim(), fim: fimVal, ...inicioOpt, ...areaOpt, priority });
+      const fimOpt2 = fim ? { fim: fim as ISODate } : {};
+      await createDever({ type: 'once', title: title.trim(), ...fimOpt2, ...inicioOpt, ...areaOpt, priority });
     } else {
       let recurrence: RecurrenceConfig;
       if (recurrenceType === 'daily') {
@@ -50,7 +51,7 @@ export function DeveresPage() {
         if (weekdays.length === 0) { alert('Selecione ao menos um dia da semana.'); return; }
         recurrence = { type: 'weekly', weekdays: weekdays as [WeekdayName, ...WeekdayName[]] };
       } else {
-        recurrence = { type: 'monthly', monthDay };
+        recurrence = { type: 'monthly', monthDay, ...(monthDayEnd !== '' && { monthDayEnd }) };
       }
       await createDever({ type: 'cyclic', title: title.trim(), recurrence, ...inicioOpt, ...fimOpt, ...areaOpt, priority });
     }
@@ -59,6 +60,7 @@ export function DeveresPage() {
     setArea('');
     setInicio('');
     setFim('');
+    setMonthDayEnd('');
   }
 
   function toggleWeekday(day: WeekdayName) {
@@ -97,7 +99,7 @@ export function DeveresPage() {
           </div>
           {type === 'once' && (
             <div>
-              <label style={labelStyle}>Fim (padrão: hoje):</label>
+              <label style={labelStyle}>Prazo (vazio = sem prazo):</label>
               <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
             </div>
           )}
@@ -139,9 +141,15 @@ export function DeveresPage() {
             )}
 
             {recurrenceType === 'monthly' && (
-              <div>
-                <label style={labelStyle}>Dia do mês:</label>
-                <input type="number" min={1} max={31} value={monthDay} onChange={(e) => setMonthDay(Number(e.target.value))} style={{ ...inputStyle, maxWidth: 80 }} />
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div>
+                  <label style={labelStyle}>Dia início:</label>
+                  <input type="number" min={1} max={31} value={monthDay} onChange={(e) => setMonthDay(Number(e.target.value))} style={{ ...inputStyle, maxWidth: 80 }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Dia fim (opcional):</label>
+                  <input type="number" min={1} max={31} value={monthDayEnd} onChange={(e) => setMonthDayEnd(e.target.value === '' ? '' : Number(e.target.value))} placeholder="—" style={{ ...inputStyle, maxWidth: 80 }} />
+                </div>
               </div>
             )}
           </div>

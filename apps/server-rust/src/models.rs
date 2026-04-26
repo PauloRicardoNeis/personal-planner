@@ -52,8 +52,14 @@ pub enum Dever {
         active: bool,
         #[serde(rename = "createdAt")]
         created_at: String,
+        /// ISODateTime — when the dever enters its active window.
+        #[serde(default)]
+        inicio: Option<String>,
+        /// ISODate — the deadline. None = indefinite (no deadline).
+        /// Alias allows reading legacy "deadline" field.
+        #[serde(alias = "deadline", skip_serializing_if = "Option::is_none", default)]
+        fim: Option<String>,
         completions: Vec<DeverCompletion>,
-        deadline: String,
     },
     #[serde(rename = "cyclic")]
     Cyclic {
@@ -65,8 +71,14 @@ pub enum Dever {
         active: bool,
         #[serde(rename = "createdAt")]
         created_at: String,
-        completions: Vec<DeverCompletion>,
+        /// ISODateTime — when the dever enters its active window.
+        #[serde(default)]
+        inicio: Option<String>,
+        /// ISODate — optional end of the active window.
+        #[serde(skip_serializing_if = "Option::is_none", default)]
+        fim: Option<String>,
         recurrence: RecurrenceConfig,
+        completions: Vec<DeverCompletion>,
     },
 }
 
@@ -94,6 +106,15 @@ impl Dever {
             Dever::Once { priority, .. } | Dever::Cyclic { priority, .. } => priority,
         }
     }
+
+    /// Returns the inicio timestamp, falling back to createdAt for legacy data.
+    pub fn inicio_or_created(&self) -> &str {
+        match self {
+            Dever::Once { inicio, created_at, .. } | Dever::Cyclic { inicio, created_at, .. } => {
+                inicio.as_deref().unwrap_or(created_at)
+            }
+        }
+    }
 }
 
 // ── RecurrenceConfig ──────────────────────────────────────────────────────────
@@ -107,11 +128,14 @@ pub enum RecurrenceConfig {
     /// Occurs on specific weekdays.
     #[serde(rename = "weekly")]
     Weekly { weekdays: Vec<String> },
-    /// Occurs on a fixed day of the month.
+    /// Occurs on a fixed day of the month, optionally with a window.
     #[serde(rename = "monthly")]
     Monthly {
         #[serde(rename = "monthDay")]
         month_day: u8,
+        /// Optional end day of the active window.
+        #[serde(rename = "monthDayEnd", skip_serializing_if = "Option::is_none")]
+        month_day_end: Option<u8>,
     },
 }
 
@@ -138,7 +162,7 @@ pub fn is_occurrence_on(config: &RecurrenceConfig, date: &str) -> bool {
             };
             weekdays.iter().any(|w| w == weekday)
         }
-        RecurrenceConfig::Monthly { month_day } => parsed.day() as u8 == *month_day,
+        RecurrenceConfig::Monthly { month_day, .. } => parsed.day() as u8 == *month_day,
     }
 }
 
@@ -264,6 +288,106 @@ pub fn compute_streaks(
         at_risk,
         rate_30d: rate_30d.min(100),
     }
+}
+
+// ── Projeto ──────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum EtapaStatus {
+    Pending,
+    InProgress,
+    Done,
+    Blocked,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjetoStatus {
+    Planning,
+    Active,
+    Paused,
+    Done,
+    Archived,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Etapa {
+    pub id: String,
+    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub status: EtapaStatus,
+    pub order: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deadline: Option<String>,
+    #[serde(rename = "effortHours", skip_serializing_if = "Option::is_none")]
+    pub effort_hours: Option<f64>,
+    #[serde(rename = "dependsOn", skip_serializing_if = "Option::is_none")]
+    pub depends_on: Option<Vec<String>>,
+    #[serde(rename = "completedAt", skip_serializing_if = "Option::is_none")]
+    pub completed_at: Option<String>,
+    #[serde(rename = "createdAt")]
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Projeto {
+    pub id: String,
+    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub area: Option<String>,
+    pub priority: Priority,
+    pub status: ProjetoStatus,
+    #[serde(rename = "createdAt")]
+    pub created_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inicio: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fim: Option<String>,
+    pub etapas: Vec<Etapa>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ProjetoProgress {
+    pub completed: usize,
+    pub total: usize,
+    pub percent: u32,
+}
+
+pub fn compute_projeto_progress(projeto: &Projeto) -> ProjetoProgress {
+    let total = projeto.etapas.len();
+    if total == 0 {
+        return ProjetoProgress { completed: 0, total: 0, percent: 0 };
+    }
+    let completed = projeto.etapas.iter().filter(|e| e.status == EtapaStatus::Done).count();
+    let percent = ((completed as f64 / total as f64) * 100.0).round() as u32;
+    ProjetoProgress { completed, total, percent }
+}
+
+/// Returns etapas that are actionable: not done, all dependencies satisfied.
+pub fn get_next_etapas(projeto: &Projeto) -> Vec<&Etapa> {
+    let done_ids: std::collections::HashSet<&str> = projeto
+        .etapas
+        .iter()
+        .filter(|e| e.status == EtapaStatus::Done)
+        .map(|e| e.id.as_str())
+        .collect();
+
+    let mut result: Vec<&Etapa> = projeto
+        .etapas
+        .iter()
+        .filter(|e| e.status != EtapaStatus::Done)
+        .filter(|e| {
+            e.depends_on.as_ref().map_or(true, |deps| {
+                deps.is_empty() || deps.iter().all(|d| done_ids.contains(d.as_str()))
+            })
+        })
+        .collect();
+    result.sort_by_key(|e| e.order);
+    result
 }
 
 // ── Nutrition ─────────────────────────────────────────────────────────────────
@@ -594,4 +718,45 @@ pub fn zero_targets() -> DailyTargets {
         omega3: None,
         cholesterol: None,
     }
+}
+
+// ── Games ──────────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Game {
+    pub id: String,
+    pub source: String,
+    #[serde(rename = "steamAppId")]
+    pub steam_app_id: u32,
+    pub name: String,
+    #[serde(rename = "playtimeMinutes")]
+    pub playtime_minutes: u32,
+    #[serde(rename = "iconHash", skip_serializing_if = "Option::is_none")]
+    pub icon_hash: Option<String>,
+    #[serde(rename = "logoHash", skip_serializing_if = "Option::is_none")]
+    pub logo_hash: Option<String>,
+    #[serde(rename = "lastImportedAt")]
+    pub last_imported_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SteamLibrarySettings {
+    #[serde(rename = "apiKey")]
+    pub api_key: String,
+    pub profile: String,
+    #[serde(rename = "resolvedSteamId", skip_serializing_if = "Option::is_none")]
+    pub resolved_steam_id: Option<String>,
+    #[serde(rename = "lastSyncedAt", skip_serializing_if = "Option::is_none")]
+    pub last_synced_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct SteamSyncResult {
+    pub games: Vec<Game>,
+    #[serde(rename = "importedCount")]
+    pub imported_count: usize,
+    #[serde(rename = "syncedAt")]
+    pub synced_at: String,
+    #[serde(rename = "resolvedSteamId")]
+    pub resolved_steam_id: String,
 }

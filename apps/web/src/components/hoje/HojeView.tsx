@@ -52,7 +52,7 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── Habits + Deveres side by side ────────────────────────────────── */}
+      {/* Habits + Deveres side by side */}
       {(hasHabits || hasDeveres) && (
         <div style={{
           display: 'grid',
@@ -172,7 +172,7 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
         </div>
       )}
 
-      {/* ── Nutrition ─────────────────────────────────────────────────────── */}
+      {/* Nutrition */}
       {snapshot.nutritionSummary && (
         <section
           style={{ ...cardStyle, cursor: 'pointer', transition: 'box-shadow var(--transition)' }}

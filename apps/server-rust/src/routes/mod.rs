@@ -1,8 +1,10 @@
 pub mod deveres;
 pub mod diary;
 pub mod foods;
+pub mod games;
 pub mod habits;
 pub mod nutrition;
+pub mod projetos;
 pub mod today;
 
 use axum::{

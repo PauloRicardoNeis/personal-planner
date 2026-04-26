@@ -1,8 +1,33 @@
 import type { Habit, HabitInput } from '../models/habit.js';
 import type { Dever, DeverBase, DeverInput } from '../models/dever.js';
 import type { Projeto, ProjetoInput, ProjetoPatch, EtapaInput, EtapaPatch } from '../models/projeto.js';
-import type { HabitId, DeverId, ProjetoId, EtapaId, ISODate, FoodId, DiaryEntryId } from '../models/shared.js';
+import type {
+  HabitId,
+  DeverId,
+  ProjetoId,
+  EtapaId,
+  ISODate,
+  FoodId,
+  DiaryEntryId,
+  BookId,
+  MovieId,
+  SaudeItemId,
+  ListaCompraId,
+  CompraItemId,
+} from '../models/shared.js';
 import type { Food, FoodInput, DiaryEntry, DiaryEntryInput, NutritionProfile, DailyNutritionSummary } from '../models/nutrition.js';
+import type { Game, SteamLibrarySettings, SteamLibrarySettingsInput, SteamSyncResult } from '../models/game.js';
+import type { Book, BookInput, BookPatch, ReadingGoal } from '../models/book.js';
+import type { Movie, MovieInput, TmdbSearchResult } from '../models/movie.js';
+import type { SaudeItem, SaudeItemInput, SaudeItemPatch, SaudeEventInput } from '../models/saude.js';
+import type {
+  ListaCompra,
+  ListaCompraInput,
+  ListaCompraPatch,
+  CompraItem,
+  CompraItemInput,
+  CompraItemPatch,
+} from '../models/compra.js';
 import type { HabitStreakInfo } from '../domain/streaks.js';
 import type { ProjetoProgress } from '../domain/projeto.js';
 
@@ -33,7 +58,7 @@ export interface TodaySnapshot {
     /** For once-deveres: the deadline. For cyclic: the date the recurrence fires. */
     occurrenceDate: ISODate;
     isDone: boolean;
-    /** true when occurrenceDate < date — only possible for OnceDever */
+    /** true when overdue — once-deveres past deadline, or cyclic monthly window past end without completion */
     isOverdue: boolean;
   }>;
 
@@ -42,6 +67,20 @@ export interface TodaySnapshot {
     projeto: Projeto;
     progress: ProjetoProgress;
     nextEtapas: import('../models/projeto.js').Etapa[];
+  }>;
+
+  saude: Array<{
+    item: SaudeItem;
+    nextDate: ISODate;
+    isOverdue: boolean;
+  }>;
+
+  compras: Array<{
+    lista: ListaCompra;
+    nextDate: ISODate;
+    isOverdue: boolean;
+    pendingItems: number;
+    totalItems: number;
   }>;
 
   nutritionSummary?: {
@@ -156,6 +195,29 @@ export interface DataAdapter {
   /** Reorders etapas by providing the full ordered list of IDs. */
   reorderEtapas(projetoId: ProjetoId, etapaIds: EtapaId[]): Promise<Result<Projeto>>;
 
+  // ── Saúde ───────────────────────────────────────────────────────────────────
+
+  getSaudeItems(): Promise<Result<SaudeItem[]>>;
+  createSaudeItem(input: SaudeItemInput): Promise<Result<SaudeItem>>;
+  updateSaudeItem(id: SaudeItemId, patch: SaudeItemPatch): Promise<Result<SaudeItem>>;
+  recordSaudeEvent(id: SaudeItemId, input: SaudeEventInput): Promise<Result<SaudeItem>>;
+  archiveSaudeItem(id: SaudeItemId): Promise<Result<void>>;
+
+  // ── Compras ─────────────────────────────────────────────────────────────────
+
+  getListasCompra(): Promise<Result<ListaCompra[]>>;
+  createListaCompra(input: ListaCompraInput): Promise<Result<ListaCompra>>;
+  updateListaCompra(id: ListaCompraId, patch: ListaCompraPatch): Promise<Result<ListaCompra>>;
+  archiveListaCompra(id: ListaCompraId): Promise<Result<void>>;
+  addCompraItem(listaId: ListaCompraId, input: CompraItemInput): Promise<Result<ListaCompra>>;
+  updateCompraItem(
+    listaId: ListaCompraId,
+    itemId: CompraItemId,
+    patch: CompraItemPatch,
+  ): Promise<Result<CompraItem>>;
+  removeCompraItem(listaId: ListaCompraId, itemId: CompraItemId): Promise<Result<ListaCompra>>;
+  completeListaCompra(listaId: ListaCompraId, date: ISODate): Promise<Result<ListaCompra>>;
+
   // ── Foods ───────────────────────────────────────────────────────────────────
 
   getFoods(): Promise<Result<Food[]>>;
@@ -191,5 +253,39 @@ export interface DataAdapter {
    *
    * This keeps scheduling logic testable in isolation, out of React components.
    */
+  // ── Games ───────────────────────────────────────────────────────────────────
+
+  getGames(): Promise<Result<Game[]>>;
+  getSteamLibrarySettings(): Promise<Result<SteamLibrarySettings | null>>;
+  saveSteamLibrarySettings(settings: SteamLibrarySettingsInput): Promise<Result<SteamLibrarySettings>>;
+  syncSteamLibrary(): Promise<Result<SteamSyncResult>>;
+
+  // ── Movies ─────────────────────────────────────────────────────────────────
+
+  getMovies(): Promise<Result<Movie[]>>;
+  createMovie(input: MovieInput): Promise<Result<Movie>>;
+  updateMovie(
+    id: MovieId,
+    patch: Partial<Pick<Movie, 'status' | 'rating' | 'tags'>>,
+  ): Promise<Result<Movie>>;
+  deleteMovie(id: MovieId): Promise<Result<void>>;
+  searchTmdbMovies(query: string): Promise<Result<TmdbSearchResult[]>>;
+  getTmdbApiKey(): Promise<Result<string | null>>;
+  saveTmdbApiKey(apiKey: string): Promise<Result<string>>;
+
+  // ── Books ──────────────────────────────────────────────────────────────────
+
+  getBooks(): Promise<Result<Book[]>>;
+  createBook(input: BookInput): Promise<Result<Book>>;
+  updateBook(id: BookId, patch: BookPatch): Promise<Result<Book>>;
+  archiveBook(id: BookId): Promise<Result<void>>;
+
+  // ── Reading Goals ──────────────────────────────────────────────────────────
+
+  getReadingGoals(): Promise<Result<ReadingGoal[]>>;
+  setReadingGoal(year: number, target: number): Promise<Result<ReadingGoal>>;
+
+  // ── Today ──────────────────────────────────────────────────────────────────
+
   getTodaySnapshot(date: ISODate): Promise<Result<TodaySnapshot>>;
 }

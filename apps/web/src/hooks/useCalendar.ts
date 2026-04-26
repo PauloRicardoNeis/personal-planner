@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
+  getOnceDeverCalendarDate,
+  getOnceDeverOccurrenceDate,
   isOccurrenceOn,
   toISODate,
   type Dever,
@@ -44,12 +46,20 @@ export function useCalendar(deveres: Dever[]) {
     for (const week of weeks) {
       for (const date of week) {
         const matching = deveres.flatMap((dever) => {
+          const onceCalendarDate =
+            dever.type === 'once'
+              ? getOnceDeverCalendarDate(dever)
+              : null;
           const occurs =
             dever.type === 'once'
-              ? dever.fim === date
+              ? onceCalendarDate === date
               : isOccurrenceOn(dever.recurrence, date);
           if (!occurs) return [];
-          const isDone = dever.completions.some((c) => c.occurrenceDate === date);
+          const occurrenceDate =
+            dever.type === 'once'
+              ? getOnceDeverOccurrenceDate(dever)
+              : date;
+          const isDone = dever.completions.some((c) => c.occurrenceDate === occurrenceDate);
           return [{ dever, isDone }];
         });
         map.set(date, { date, deveres: matching });

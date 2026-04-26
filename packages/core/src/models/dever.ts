@@ -34,8 +34,8 @@ export interface DeverBase {
 
 export interface OnceDever extends DeverBase {
   type: 'once';
-  /** Required for once deveres — the deadline date */
-  fim: ISODate;
+  /** Deadline date. When absent the dever is "indefinite" — shown daily until completed. */
+  fim?: ISODate;
 }
 
 export interface CyclicDever extends DeverBase {
@@ -50,7 +50,8 @@ export type DeverInput =
   | {
       type: 'once';
       title: string;
-      fim: ISODate;
+      /** When omitted the dever is indefinite — no deadline. */
+      fim?: ISODate;
       inicio?: ISODateTime;
       area?: string;
       priority: 'low' | 'medium' | 'high';

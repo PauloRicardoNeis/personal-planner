@@ -3,7 +3,7 @@ mod models;
 mod routes;
 
 use axum::{
-    routing::{delete, get, patch, post},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 use std::sync::{Arc, Mutex};
@@ -81,7 +81,35 @@ async fn main() {
             "/deveres/:id/archive",
             post(routes::deveres::archive_dever),
         )
+        // ── Projetos ──────────────────────────────────────────────────────────
+        .route(
+            "/projetos",
+            get(routes::projetos::get_projetos).post(routes::projetos::create_projeto),
+        )
+        .route("/projetos/:id", patch(routes::projetos::update_projeto))
+        .route(
+            "/projetos/:id/archive",
+            post(routes::projetos::archive_projeto),
+        )
+        .route(
+            "/projetos/:id/etapas",
+            post(routes::projetos::add_etapa),
+        )
+        .route(
+            "/projetos/:id/etapas/order",
+            put(routes::projetos::reorder_etapas),
+        )
+        .route(
+            "/projetos/:id/etapas/:etapa_id",
+            patch(routes::projetos::update_etapa).delete(routes::projetos::remove_etapa),
+        )
         // ── Foods ─────────────────────────────────────────────────────────────
+        .route("/games", get(routes::games::get_games))
+        .route(
+            "/games/steam-settings",
+            get(routes::games::get_steam_settings).put(routes::games::save_steam_settings),
+        )
+        .route("/games/sync-steam", post(routes::games::sync_steam))
         .route(
             "/foods",
             get(routes::foods::get_foods).post(routes::foods::create_food),

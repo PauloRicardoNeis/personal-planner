@@ -78,7 +78,7 @@
 
 /* ── Dark Mode (system preference) ─────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-theme="dynamic"]) {
     --bg: #0c0c14;
     --text: #e8e8f0;
     --text-secondary: #a0a3b8;

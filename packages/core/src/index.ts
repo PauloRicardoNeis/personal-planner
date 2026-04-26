@@ -8,6 +8,13 @@ export type {
   EtapaId,
   FoodId,
   DiaryEntryId,
+  GameId,
+  BookId,
+  MovieId,
+  SaudeItemId,
+  SaudeEventId,
+  ListaCompraId,
+  CompraItemId,
   WeekdayName,
   DailyRecurrence,
   WeeklyRecurrence,
@@ -77,11 +84,105 @@ export {
   NutritionProfileSchema,
 } from './models/nutrition.js';
 
+export type {
+  Game,
+  SteamLibrarySettings,
+  SteamLibrarySettingsInput,
+  SteamSyncResult,
+} from './models/game.js';
+
+export {
+  GameSchema,
+  GameArraySchema,
+  SteamLibrarySettingsSchema,
+  SteamSyncResultSchema,
+} from './models/game.js';
+
+export type {
+  Book,
+  BookInput,
+  BookPatch,
+  BookStatus,
+  ReadingGoal,
+} from './models/book.js';
+
+export {
+  BookStatusSchema,
+  BookSchema,
+  BookArraySchema,
+  ReadingGoalSchema,
+  ReadingGoalArraySchema,
+} from './models/book.js';
+
+export type {
+  Movie,
+  MovieInput,
+  MovieRating,
+  TmdbSearchResult,
+} from './models/movie.js';
+
+export {
+  MovieRatingSchema,
+  MovieSchema,
+  MovieArraySchema,
+  TmdbSearchResultSchema,
+  TmdbSearchResultArraySchema,
+} from './models/movie.js';
+
+export type {
+  SaudeItemType,
+  SaudeEventKind,
+  SaudeIntervalUnit,
+  SaudeSchedule,
+  SaudeEvent,
+  SaudeItem,
+  SaudeItemInput,
+  SaudeItemPatch,
+  SaudeEventInput,
+} from './models/saude.js';
+
+export {
+  SaudeItemTypeSchema,
+  SaudeEventKindSchema,
+  SaudeIntervalUnitSchema,
+  SaudeScheduleSchema,
+  SaudeEventSchema,
+  SaudeItemSchema,
+  SaudeItemArraySchema,
+} from './models/saude.js';
+
+export type {
+  CompraIntervalUnit,
+  CompraReminder,
+  CompraPricePoint,
+  CompraItem,
+  ListaCompra,
+  ListaCompraInput,
+  ListaCompraPatch,
+  CompraItemInput,
+  CompraItemPatch,
+} from './models/compra.js';
+
+export {
+  CompraIntervalUnitSchema,
+  CompraReminderSchema,
+  CompraPricePointSchema,
+  CompraItemSchema,
+  ListaCompraSchema,
+  ListaCompraArraySchema,
+} from './models/compra.js';
+
 // ── Contracts ─────────────────────────────────────────────────────────────────
 export type { Result, TodaySnapshot, DataAdapter } from './contracts/DataAdapter.js';
 
 // ── Domain ────────────────────────────────────────────────────────────────────
-export { isOccurrenceOn } from './domain/recurrence.js';
+export {
+  getDeverStartDate,
+  hasExplicitDeverStart,
+  getOnceDeverOccurrenceDate,
+  getOnceDeverCalendarDate,
+} from './domain/dever.js';
+export { isOccurrenceOn, getMonthlyWindowInfo } from './domain/recurrence.js';
 
 export type { ProjetoProgress, ProjetoEffort } from './domain/projeto.js';
 export {
@@ -96,9 +197,21 @@ export {
 export type { HabitStreakInfo } from './domain/streaks.js';
 export { computeStreaks } from './domain/streaks.js';
 
+export type { ParsedSteamProfile } from './domain/steam.js';
+export { parseSteamProfile, normalizeSteamOwnedGamesResponse } from './domain/steam.js';
+
+export type { OpenLibrarySearchResult } from './domain/openLibrary.js';
+export { parseOpenLibraryResponse } from './domain/openLibrary.js';
+
 export {
   computePortionNutrients,
   computeDailyTotals,
   computeDailyTargets,
   computePercentages,
 } from './domain/nutrition.js';
+
+export type { SaudeDueInfo } from './domain/saude.js';
+export { getSaudeDueInfo } from './domain/saude.js';
+
+export type { ListaCompraDueInfo } from './domain/compras.js';
+export { getListaCompraDueInfo } from './domain/compras.js';

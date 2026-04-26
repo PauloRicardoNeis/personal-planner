@@ -7,10 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AppState,
-    db::{read_all_deveres, read_all_foods, read_all_habits, read_diary_entries_by_date, read_nutrition_profile},
+    db::{read_all_deveres, read_all_foods, read_all_habits, read_all_projetos, read_diary_entries_by_date, read_nutrition_profile},
     models::{
         add_targets, compute_daily_targets, compute_portion_nutrients, compute_streaks,
-        zero_targets, Dever, DiaryEntry, Habit, HabitStreakInfo, Priority, is_occurrence_on,
+        compute_projeto_progress, get_next_etapas, zero_targets,
+        Dever, DiaryEntry, Etapa, Habit, HabitStreakInfo, Projeto, ProjetoProgress, ProjetoStatus, Priority, is_occurrence_on,
     },
     routes::{api_err, api_ok},
 };
@@ -44,6 +45,14 @@ struct DeverItem {
 }
 
 #[derive(Serialize)]
+struct ProjetoItem {
+    projeto: Projeto,
+    progress: ProjetoProgress,
+    #[serde(rename = "nextEtapas")]
+    next_etapas: Vec<Etapa>,
+}
+
+#[derive(Serialize)]
 struct NutritionCard {
     calories: f64,
     #[serde(rename = "caloriesTarget")]
@@ -72,6 +81,7 @@ struct TodaySnapshot {
     date: String,
     habits: Vec<HabitItem>,
     deveres: Vec<DeverItem>,
+    projetos: Vec<ProjetoItem>,
     #[serde(rename = "nutritionSummary", skip_serializing_if = "Option::is_none")]
     nutrition_summary: Option<NutritionCard>,
 }
@@ -107,20 +117,43 @@ pub async fn get_today(
     let mut dever_items: Vec<DeverItem> = Vec::new();
 
     for dever in read_all_deveres(&db).into_iter().filter(|d| d.active()) {
+        // Skip deveres that haven't started yet
+        let inicio_str = dever.inicio_or_created();
+        let inicio_date = &inicio_str[..inicio_str.len().min(10)];
+        if inicio_date > date.as_str() {
+            continue;
+        }
+
         let (occurrence_date, is_done, is_overdue) = match &dever {
-            Dever::Once { deadline, completions, .. } => {
-                let is_overdue = deadline.as_str() < date.as_str();
-                let is_due_today = deadline == date;
-                if !is_due_today && !is_overdue {
-                    continue;
+            Dever::Once { fim, completions, .. } => {
+                if let Some(f) = fim {
+                    // Has deadline — show when due or overdue
+                    let is_overdue = f.as_str() < date.as_str();
+                    let is_due_today = f == date;
+                    if !is_due_today && !is_overdue {
+                        continue;
+                    }
+                    let is_done = completions.iter().any(|c| &c.occurrence_date == f);
+                    if is_done {
+                        continue;
+                    }
+                    (f.clone(), false, is_overdue)
+                } else {
+                    // Indefinite — show every day until completed
+                    let is_done = completions.iter().any(|c| c.occurrence_date == *date);
+                    if is_done {
+                        continue;
+                    }
+                    (date.clone(), false, false)
                 }
-                let is_done = completions.iter().any(|c| &c.occurrence_date == deadline);
-                if is_done {
-                    continue; // hide completed once-deveres from today view
-                }
-                (deadline.clone(), false, is_overdue)
             }
-            Dever::Cyclic { recurrence, completions, .. } => {
+            Dever::Cyclic { recurrence, completions, fim, .. } => {
+                // Skip cyclic deveres past their end date
+                if let Some(f) = fim {
+                    if f.as_str() < date.as_str() {
+                        continue;
+                    }
+                }
                 if !is_occurrence_on(recurrence, date) {
                     continue;
                 }
@@ -188,10 +221,22 @@ pub async fn get_today(
         }
     });
 
+    // ── Projetos ──────────────────────────────────────────────────────────────
+    let projeto_items: Vec<ProjetoItem> = read_all_projetos(&db)
+        .into_iter()
+        .filter(|p| p.status == ProjetoStatus::Active)
+        .map(|projeto| {
+            let progress = compute_projeto_progress(&projeto);
+            let next_etapas: Vec<Etapa> = get_next_etapas(&projeto).into_iter().cloned().collect();
+            ProjetoItem { projeto, progress, next_etapas }
+        })
+        .collect();
+
     api_ok(TodaySnapshot {
         date: date.clone(),
         habits,
         deveres: dever_items,
+        projetos: projeto_items,
         nutrition_summary,
     })
 }

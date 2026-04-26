@@ -1,0 +1,58 @@
+import { describe, expect, it } from 'vitest';
+import { normalizeSteamOwnedGamesResponse, parseSteamProfile } from './steam.js';
+
+describe('parseSteamProfile', () => {
+  it('accepts a SteamID64 directly', () => {
+    expect(parseSteamProfile('76561198000000000')).toEqual({
+      kind: 'steamid',
+      steamId: '76561198000000000',
+    });
+  });
+
+  it('extracts a SteamID64 from a profiles URL', () => {
+    expect(parseSteamProfile('https://steamcommunity.com/profiles/76561198000000000/')).toEqual({
+      kind: 'steamid',
+      steamId: '76561198000000000',
+    });
+  });
+
+  it('extracts a vanity URL slug from a custom profile URL', () => {
+    expect(parseSteamProfile('https://steamcommunity.com/id/gaben/')).toEqual({
+      kind: 'vanity',
+      vanity: 'gaben',
+    });
+  });
+});
+
+describe('normalizeSteamOwnedGamesResponse', () => {
+  it('maps and sorts valid owned games by playtime descending', () => {
+    const result = normalizeSteamOwnedGamesResponse(
+      {
+        response: {
+          game_count: 3,
+          games: [
+            { appid: 20, name: 'Game B', playtime_forever: 30, img_icon_url: 'icon-b' },
+            { appid: 10, name: 'Game A', playtime_forever: 120, img_logo_url: 'logo-a' },
+            { appid: 0, name: '', playtime_forever: 500 },
+          ],
+        },
+      },
+      '2026-04-06T12:00:00.000Z' as never,
+      '76561198000000000',
+    );
+
+    expect(result.importedCount).toBe(2);
+    expect(result.resolvedSteamId).toBe('76561198000000000');
+    expect(result.games.map((game) => game.name)).toEqual(['Game A', 'Game B']);
+    expect(result.games[0]).toMatchObject({
+      source: 'steam',
+      steamAppId: 10,
+      playtimeMinutes: 120,
+      logoHash: 'logo-a',
+    });
+    expect(result.games[1]).toMatchObject({
+      steamAppId: 20,
+      iconHash: 'icon-b',
+    });
+  });
+});

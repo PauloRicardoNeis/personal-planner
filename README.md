@@ -18,6 +18,8 @@ pnpm typecheck
 pnpm test
 ```
 
+Se voce esta configurando uma maquina Windows nova, veja [`docs/DEV_SETUP_WINDOWS.md`](./docs/DEV_SETUP_WINDOWS.md).
+
 ## Estrutura
 
 ```
