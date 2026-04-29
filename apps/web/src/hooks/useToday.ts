@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { todayISODate, type TodaySnapshot } from '@planner/core';
 import { adapter } from '../adapter.js';
+import { normalizeTodaySnapshotForUi } from '../habitCompatibility.js';
 
 type State =
   | { status: 'loading' }
@@ -14,7 +15,7 @@ export function useToday() {
     setState({ status: 'loading' });
     const result = await adapter.getTodaySnapshot(todayISODate());
     if (result.ok) {
-      setState({ status: 'ok', snapshot: result.data });
+      setState({ status: 'ok', snapshot: normalizeTodaySnapshotForUi(result.data) });
     } else {
       setState({ status: 'error', message: result.error });
     }

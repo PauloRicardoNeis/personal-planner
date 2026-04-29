@@ -10,7 +10,7 @@ Cada filme pode ser classificado como `watchlist` ou `watched`, receber tags liv
 
 - [x] Dado que o usuário abre a aba `Filmes`, quando a página carrega, então ele vê a configuração da API key TMDB, a área de busca/adicionar filme e as tabs `Para Assistir` e `Assistidos`.
 - [x] Dado que o usuário configura uma API key TMDB válida, quando recarrega a aplicação, então a chave permanece disponível para novas buscas sem precisar ser digitada novamente.
-- [ ] Dado que a API key TMDB está configurada, quando o usuário busca um filme e escolhe um resultado, então o filme é adicionado à watchlist com título, ano, poster, overview e tags sugeridas pelo resultado.
+- [x] Dado que a API key TMDB está configurada, quando o usuário busca um filme e escolhe um resultado, então o filme é adicionado à watchlist com título, ano, poster, overview e tags sugeridas pelo resultado.
 - [x] Dado que o usuário quer cadastrar um filme sem depender do TMDB, quando usa o fluxo de adição manual, então consegue salvar um filme com título obrigatório e metadados opcionais.
 - [x] Dado que existe um filme na watchlist, quando o usuário o marca como assistido e define uma nota, então o filme passa para a aba `Assistidos`, registra `watchedAt` e mantém a nota salva.
 - [x] Dado que existem filmes com tags diferentes, quando o usuário filtra por uma tag, então a grade mostra apenas filmes da tab atual que possuem essa tag.

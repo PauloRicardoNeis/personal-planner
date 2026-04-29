@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { type Dever, type DeverInput, type DeverId, type ISODate } from '@planner/core';
+import { type Dever, type DeverBase, type DeverInput, type DeverId, type ISODate } from '@planner/core';
 import { adapter } from '../adapter.js';
 
 type State =
@@ -26,6 +26,15 @@ export function useDeveres() {
     void load();
   }, [load]);
 
+  const updateDever = useCallback(async (
+    id: DeverId,
+    patch: Partial<Pick<DeverBase, 'title' | 'area' | 'priority' | 'active'>>,
+  ) => {
+    const result = await adapter.updateDever(id, patch);
+    void load();
+    return result;
+  }, [load]);
+
   const markDone = useCallback(async (id: DeverId, occurrenceDate: ISODate) => {
     await adapter.markDeverDone(id, occurrenceDate);
     void load();
@@ -41,5 +50,5 @@ export function useDeveres() {
     void load();
   }, [load]);
 
-  return { state, createDever, markDone, unmarkDone, archive };
+  return { state, createDever, updateDever, markDone, unmarkDone, archive };
 }

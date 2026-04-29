@@ -1,16 +1,13 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::Response,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::Response, Json};
 use serde::Deserialize;
 
 use crate::{
-    AppState,
-    db::{read_all_games, read_steam_library_settings, replace_games, write_steam_library_settings},
+    db::{
+        read_all_games, read_steam_library_settings, replace_games, write_steam_library_settings,
+    },
     models::{Game, SteamLibrarySettings, SteamSyncResult},
     routes::{api_err, api_ok, now_iso},
+    AppState,
 };
 
 pub async fn get_games(State(state): State<AppState>) -> Response {
@@ -76,35 +73,44 @@ pub async fn sync_steam(State(state): State<AppState>) -> Response {
     };
 
     let Some(settings) = settings else {
-        return api_err(StatusCode::BAD_REQUEST, "Salve a chave da Steam e o perfil antes de sincronizar.");
+        return api_err(
+            StatusCode::BAD_REQUEST,
+            "Salve a chave da Steam e o perfil antes de sincronizar.",
+        );
     };
 
     let client = reqwest::Client::new();
-    let resolved_steam_id = match resolve_steam_id(&client, &settings.api_key, &settings.profile).await {
-        Ok(steam_id) => steam_id,
-        Err(message) => return api_err(StatusCode::BAD_REQUEST, &message),
-    };
+    let resolved_steam_id =
+        match resolve_steam_id(&client, &settings.api_key, &settings.profile).await {
+            Ok(steam_id) => steam_id,
+            Err(message) => return api_err(StatusCode::BAD_REQUEST, &message),
+        };
 
-    let owned_games = match fetch_owned_games(&client, &settings.api_key, &resolved_steam_id).await {
+    let owned_games = match fetch_owned_games(&client, &settings.api_key, &resolved_steam_id).await
+    {
         Ok(response) => response,
         Err(message) => return api_err(StatusCode::BAD_GATEWAY, &message),
     };
 
     let synced_at = now_iso();
-    let sync_result = match normalize_owned_games(owned_games, &synced_at, resolved_steam_id.clone()) {
-        Ok(result) => result,
-        Err(message) => return api_err(StatusCode::BAD_GATEWAY, &message),
-    };
+    let sync_result =
+        match normalize_owned_games(owned_games, &synced_at, resolved_steam_id.clone()) {
+            Ok(result) => result,
+            Err(message) => return api_err(StatusCode::BAD_GATEWAY, &message),
+        };
 
     {
         let db = state.db.lock().unwrap();
         replace_games(&db, &sync_result.games);
-        write_steam_library_settings(&db, &SteamLibrarySettings {
-            api_key: settings.api_key,
-            profile: settings.profile,
-            resolved_steam_id: Some(resolved_steam_id),
-            last_synced_at: Some(sync_result.synced_at.clone()),
-        });
+        write_steam_library_settings(
+            &db,
+            &SteamLibrarySettings {
+                api_key: settings.api_key,
+                profile: settings.profile,
+                resolved_steam_id: Some(resolved_steam_id),
+                last_synced_at: Some(sync_result.synced_at.clone()),
+            },
+        );
     }
 
     api_ok(sync_result)
@@ -122,9 +128,16 @@ fn parse_steam_profile(profile: &str) -> Option<ParsedSteamProfile> {
     }
 
     if let Ok(url) = reqwest::Url::parse(trimmed) {
-        if url.host_str().unwrap_or_default().contains("steamcommunity.com") {
+        if url
+            .host_str()
+            .unwrap_or_default()
+            .contains("steamcommunity.com")
+        {
             let parts: Vec<&str> = url.path_segments().into_iter().flatten().collect();
-            if parts.len() >= 2 && parts[0] == "profiles" && parts[1].chars().all(|c| c.is_ascii_digit()) {
+            if parts.len() >= 2
+                && parts[0] == "profiles"
+                && parts[1].chars().all(|c| c.is_ascii_digit())
+            {
                 return Some(ParsedSteamProfile::SteamId(parts[1].to_string()));
             }
             if parts.len() >= 2 && parts[0] == "id" && !parts[1].is_empty() {
@@ -145,7 +158,11 @@ fn parse_steam_profile(profile: &str) -> Option<ParsedSteamProfile> {
     }
 }
 
-async fn resolve_steam_id(client: &reqwest::Client, api_key: &str, profile: &str) -> Result<String, String> {
+async fn resolve_steam_id(
+    client: &reqwest::Client,
+    api_key: &str,
+    profile: &str,
+) -> Result<String, String> {
     match parse_steam_profile(profile) {
         Some(ParsedSteamProfile::SteamId(steam_id)) => Ok(steam_id),
         Some(ParsedSteamProfile::Vanity(vanity)) => {
@@ -157,7 +174,10 @@ async fn resolve_steam_id(client: &reqwest::Client, api_key: &str, profile: &str
                 .map_err(|e| format!("Falha ao resolver perfil Steam: {e}"))?;
 
             if !response.status().is_success() {
-                return Err(format!("Steam respondeu {} ao resolver o perfil.", response.status()));
+                return Err(format!(
+                    "Steam respondeu {} ao resolver o perfil.",
+                    response.status()
+                ));
             }
 
             let body: ResolveVanityEnvelope = response
@@ -166,14 +186,13 @@ async fn resolve_steam_id(client: &reqwest::Client, api_key: &str, profile: &str
                 .map_err(|e| format!("Resposta invalida ao resolver vanity URL: {e}"))?;
 
             if body.response.success == 1 {
-                body.response
-                    .steamid
-                    .ok_or_else(|| "Steam nao retornou SteamID para o perfil informado.".to_string())
+                body.response.steamid.ok_or_else(|| {
+                    "Steam nao retornou SteamID para o perfil informado.".to_string()
+                })
             } else {
-                Err(body
-                    .response
-                    .message
-                    .unwrap_or_else(|| "Nao foi possivel resolver o perfil Steam informado.".to_string()))
+                Err(body.response.message.unwrap_or_else(|| {
+                    "Nao foi possivel resolver o perfil Steam informado.".to_string()
+                }))
             }
         }
         None => Err("Informe um perfil Steam valido.".to_string()),
@@ -198,7 +217,10 @@ async fn fetch_owned_games(
         .map_err(|e| format!("Falha ao buscar biblioteca Steam: {e}"))?;
 
     if !response.status().is_success() {
-        return Err(format!("Steam respondeu {} ao buscar a biblioteca.", response.status()));
+        return Err(format!(
+            "Steam respondeu {} ao buscar a biblioteca.",
+            response.status()
+        ));
     }
 
     response
@@ -216,7 +238,10 @@ fn normalize_owned_games(
         (Some(games), _) => games,
         (None, Some(0)) => Vec::new(),
         (None, _) => {
-            return Err("A Steam nao retornou jogos visiveis. Confira a privacidade da biblioteca.".to_string());
+            return Err(
+                "A Steam nao retornou jogos visiveis. Confira a privacidade da biblioteca."
+                    .to_string(),
+            );
         }
     };
 

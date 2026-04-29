@@ -2,23 +2,23 @@
 
 ## Comportamento
 
-O usuário pode marcar e desmarcar um hábito como feito para um dia específico. O estado de conclusão é independente por dia — marcar hoje não afeta ontem ou amanhã. O estado persiste após reload.
+O usuario pode registrar e remover ocorrencias de um habito para um dia especifico. O contador de ocorrencias e independente por dia: registrar hoje nao afeta ontem ou amanha. O estado persiste apos reload.
 
 ## Acceptance Criteria
 
-- [ ] Dado um hábito ativo, quando o usuário o marca como feito para hoje, então `habit.completions[today]` é `true`
-- [ ] Dado um hábito marcado como feito hoje, quando o usuário o desmarca, então `habit.completions[today]` é removido
-- [ ] Dado um hábito marcado hoje, quando a página é recarregada, então o hábito ainda aparece como feito
-- [ ] Dado um hábito marcado ontem, quando hoje abre a view Hoje, então o hábito aparece como não feito (novo dia)
-- [ ] Dado um hábito arquivado, ele não aparece na view Hoje mesmo que tenha completions passadas
+- [x] Dado um habito ativo, quando o usuario registra a primeira ocorrencia para hoje, entao `habit.completions[today]` passa a ser `1`
+- [x] Dado um habito com ocorrencias registradas hoje, quando o usuario remove a ultima ocorrencia do dia, entao `habit.completions[today]` e removido
+- [x] Dado um habito com ocorrencias registradas hoje, quando a pagina e recarregada, entao o contador do dia continua preservado
+- [x] Dado um habito com ocorrencias registradas ontem, quando hoje abre a view Hoje, entao o habito aparece como nao feito para o novo dia
+- [x] Dado um habito arquivado, ele nao aparece na view Hoje mesmo que tenha historico passado
 
 ## Edge Cases
 
-- Marcar um hábito já marcado no mesmo dia: idempotente, não duplica nem gera erro
-- Desmarcar um hábito não marcado: idempotente, sem erro
-- Hábito com `active: false`: não aparece, check-off não deve ser possível via UI
+- Registrar novas ocorrencias no mesmo dia: incrementa o contador daquele dia sem afetar outros dias
+- Desmarcar um habito sem ocorrencias registradas no dia: no-op, sem erro
+- Habito com `active: false`: nao aparece, e o check-off nao deve ser possivel via UI
 
 ## Fora do escopo
 
-- Marcar hábito para datas passadas ou futuras
-- Streaks e métricas de consistência (Phase 3)
+- Marcar habito para datas passadas ou futuras
+- Streaks e metricas de consistencia detalhadas (cobertas em `habit-streaks.spec.md`)

@@ -2,13 +2,13 @@
 
 ## Comportamento
 
-O sistema calcula e exibe métricas de consistência para cada hábito ativo. A métrica principal é o **streak atual** — número de dias consecutivos que o hábito foi marcado como feito, terminando em hoje (ou ontem, se hoje ainda não foi marcado). Métricas secundárias incluem o maior streak histórico e a taxa de consistência dos últimos 30 dias.
+O sistema calcula e exibe métricas de consistência para cada hábito ativo. A métrica principal é o **streak atual** — número de dias consecutivos em que o hábito bateu a meta diária, terminando em hoje (ou ontem, se hoje ainda não bateu a meta). Métricas secundárias incluem o maior streak histórico e a taxa de consistência dos últimos 30 dias.
 
-O streak é derivado exclusivamente de `habit.completions` — nenhum campo novo é persistido. A lógica de cálculo é pura e testável, vivendo em `packages/core`.
+O streak é derivado de `habit.completions` e das configurações de meta/peso do hábito — nenhum campo novo de streak é persistido. A lógica de cálculo é pura e testável, vivendo em `packages/core`.
 
 ## Definições
 
-- **Streak atual**: número de dias consecutivos marcados como feitos, contando de hoje para trás. Se hoje não foi marcado mas ontem sim, o streak conta de ontem para trás (streak está "em risco", não perdido).
+- **Streak atual**: número de dias consecutivos em que a meta ponderada foi batida, contando de hoje para trás. Se hoje ainda não bateu a meta mas ontem sim, o streak conta de ontem para trás (streak está "em risco", não perdido).
 - **Streak em risco**: quando o streak atual é calculado a partir de ontem (hoje ainda não foi marcado). O usuário vê um indicador visual de que pode perder o streak se não completar hoje.
 - **Maior streak**: o maior número de dias consecutivos já alcançado na história do hábito.
 - **Taxa 30d**: proporção de dias marcados nos últimos 30 dias (0–100%).
@@ -17,44 +17,44 @@ O streak é derivado exclusivamente de `habit.completions` — nenhum campo novo
 
 ### Cálculo do streak atual
 
-- [ ] Dado um hábito marcado nos dias 11, 12, 13, 14 (hoje = 14), então o streak atual é 4
-- [ ] Dado um hábito marcado nos dias 11, 12, 13 (hoje = 14, hoje não marcado), então o streak atual é 3 e está "em risco"
-- [ ] Dado um hábito marcado nos dias 11, 12, 14 (gap no dia 13, hoje = 14), então o streak atual é 1
-- [ ] Dado um hábito marcado nos dias 11, 12 (hoje = 14, gap nos dias 13–14), então o streak atual é 0
-- [ ] Dado um hábito sem nenhuma completion, então o streak atual é 0
-- [ ] Dado um hábito marcado apenas hoje, então o streak atual é 1
+- [x] Dado um hábito marcado nos dias 11, 12, 13, 14 (hoje = 14), então o streak atual é 4
+- [x] Dado um hábito marcado nos dias 11, 12, 13 (hoje = 14, hoje não marcado), então o streak atual é 3 e está "em risco"
+- [x] Dado um hábito marcado nos dias 11, 12, 14 (gap no dia 13, hoje = 14), então o streak atual é 1
+- [x] Dado um hábito marcado nos dias 11, 12 (hoje = 14, gap nos dias 13–14), então o streak atual é 0
+- [x] Dado um hábito sem nenhuma completion, então o streak atual é 0
+- [x] Dado um hábito marcado apenas hoje, então o streak atual é 1
 
 ### Streak em risco
 
-- [ ] Dado um hábito com streak > 0 calculado a partir de ontem (hoje não marcado), então `atRisk` é `true`
-- [ ] Dado um hábito com streak > 0 calculado a partir de hoje (hoje já marcado), então `atRisk` é `false`
-- [ ] Dado um hábito com streak 0, então `atRisk` é `false` (não há nada a perder)
+- [x] Dado um hábito com streak > 0 calculado a partir de ontem (hoje não marcado), então `atRisk` é `true`
+- [x] Dado um hábito com streak > 0 calculado a partir de hoje (hoje já marcado), então `atRisk` é `false`
+- [x] Dado um hábito com streak 0, então `atRisk` é `false` (não há nada a perder)
 
 ### Maior streak
 
-- [ ] Dado um hábito marcado nos dias 1–5, 10–17, 20–22, então o maior streak é 8 (dias 10–17)
-- [ ] Dado um hábito cujo streak atual é o maior da história, `bestStreak === currentStreak`
-- [ ] Dado um hábito sem completions, o maior streak é 0
+- [x] Dado um hábito marcado nos dias 1–5, 10–17, 20–22, então o maior streak é 8 (dias 10–17)
+- [x] Dado um hábito cujo streak atual é o maior da história, `bestStreak === currentStreak`
+- [x] Dado um hábito sem completions, o maior streak é 0
 
 ### Taxa 30d
 
-- [ ] Dado um hábito marcado em 15 dos últimos 30 dias, a taxa é 50%
-- [ ] Dado um hábito criado há 10 dias e marcado em 7, a taxa é 70% (base = min(30, dias desde criação))
-- [ ] Dado um hábito sem completions, a taxa é 0%
+- [x] Dado um hábito marcado em 15 dos últimos 30 dias, a taxa é 50%
+- [x] Dado um hábito criado há 10 dias e marcado em 7, a taxa é 70% (base = min(30, dias desde criação))
+- [x] Dado um hábito sem completions, a taxa é 0%
 
 ### Exibição na UI
 
 - [ ] Na view Hábitos, cada card exibe o streak atual (ex: "🔥 12 dias")
 - [ ] Na view Hábitos, se o streak está em risco, o indicador muda visualmente (ex: "⚠️ 12 dias" ou cor diferente)
-- [ ] Na view Hoje, cada hábito exibe o streak atual ao lado do checkbox
+- [x] Na view Hoje, cada hábito exibe o streak atual ao lado do contador diário
 - [ ] Ao clicar/expandir o card de um hábito, o usuário vê: streak atual, maior streak, e taxa 30d
-- [ ] Streak de 0 dias não exibe o ícone de fogo (espaço limpo)
+- [x] Streak de 0 dias não exibe indicador visual extra
 
-### Exibição no backend (API)
+### Exibição no backend (API/adapter)
 
-- [ ] O endpoint `GET /api/habits` retorna os campos `currentStreak`, `bestStreak`, `atRisk`, e `rate30d` para cada hábito
-- [ ] O endpoint `GET /api/today` retorna `currentStreak` e `atRisk` para cada hábito no snapshot
-- [ ] Os campos de streak são calculados on-the-fly pelo servidor, não persistidos no banco
+- [x] O endpoint `GET /today` retorna um objeto `streak` com `currentStreak`, `bestStreak`, `atRisk` e `rate30d` para cada hábito do snapshot
+- [x] Quando uma resposta do adapter não inclui `streak`, `progress` ou `habitProgress`, a camada de compatibilidade da UI recalcula esses campos antes de renderizar
+- [x] Os campos de streak são calculados on-the-fly pelo core/servidor, não persistidos no banco
 
 ## Tipo de retorno
 
@@ -77,6 +77,8 @@ function computeStreaks(
 ): HabitStreakInfo;
 ```
 
+Para hábitos com múltiplas ocorrências, `computeHabitGoalCompletions(habit)` produz o mapa `Record<ISODate, true>` usado por `computeStreaks()`, incluindo apenas dias em que a pontuação bateu a meta.
+
 ## Edge Cases
 
 - Hábito criado hoje sem completions: streak 0, bestStreak 0, rate30d 0%, atRisk false
@@ -94,4 +96,4 @@ function computeStreaks(
 - Streak freezes (pular um dia sem perder o streak)
 - Streak por hábitos com recorrência customizada (ex: só dias úteis — hábitos são sempre diários)
 - Gamificação (badges, milestones, XP)
-- Gráfico de heatmap de completions (Phase 4)
+- Gráfico de heatmap de completions

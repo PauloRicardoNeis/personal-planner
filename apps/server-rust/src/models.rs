@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use serde::{Deserialize, Serialize};
+use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 // ── Priority ──────────────────────────────────────────────────────────────────
@@ -23,11 +23,198 @@ pub struct Habit {
     pub active: bool,
     #[serde(rename = "createdAt")]
     pub created_at: String,
-    /// Sparse map: date string → true. Only done dates are stored.
-    pub completions: HashMap<String, bool>,
+    /// Sparse map: date string -> number of times completed that day.
+    #[serde(rename = "timesPerDay", default = "default_habit_times_per_day")]
+    pub times_per_day: u32,
+    #[serde(rename = "valueWeights", default = "default_habit_value_weights")]
+    pub value_weights: Vec<f64>,
+    #[serde(default, deserialize_with = "deserialize_habit_completions")]
+    pub completions: HashMap<String, u32>,
+}
+
+fn default_habit_times_per_day() -> u32 {
+    1
+}
+
+fn default_habit_value_weights() -> Vec<f64> {
+    vec![1.0]
+}
+
+fn deserialize_habit_completions<'de, D>(deserializer: D) -> Result<HashMap<String, u32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let raw = HashMap::<String, serde_json::Value>::deserialize(deserializer)?;
+    let mut completions = HashMap::new();
+
+    for (date, value) in raw {
+        let count = if value == serde_json::Value::Bool(true) {
+            1
+        } else if let Some(number) = value.as_u64() {
+            u32::try_from(number).unwrap_or(u32::MAX)
+        } else if value == serde_json::Value::Bool(false) || value.is_null() {
+            0
+        } else {
+            return Err(D::Error::custom(
+                "habit completion must be true or a positive integer",
+            ));
+        };
+
+        if count > 0 {
+            completions.insert(date, count);
+        }
+    }
+
+    Ok(completions)
+}
+
+pub fn normalize_habit_times_per_day(value: Option<u32>) -> u32 {
+    value.unwrap_or(1).clamp(1, 99)
+}
+
+pub fn normalize_habit_value_weights(
+    times_per_day: u32,
+    value_weights: Option<Vec<f64>>,
+) -> Vec<f64> {
+    let valid_weights: Vec<f64> = value_weights
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|weight| weight.is_finite() && *weight > 0.0)
+        .collect();
+    let fallback = valid_weights.last().copied().unwrap_or(1.0);
+
+    (0..times_per_day as usize)
+        .map(|index| valid_weights.get(index).copied().unwrap_or(fallback))
+        .collect()
+}
+
+fn normalized_habit_weighted_settings(habit: &Habit) -> (u32, Vec<f64>) {
+    let times_per_day = normalize_habit_times_per_day(Some(habit.times_per_day));
+    let value_weights =
+        normalize_habit_value_weights(times_per_day, Some(habit.value_weights.clone()));
+
+    (times_per_day, value_weights)
+}
+
+pub fn habit_target_score(habit: &Habit) -> f64 {
+    let (times_per_day, value_weights) = normalized_habit_weighted_settings(habit);
+    value_weights.iter().take(times_per_day as usize).sum()
+}
+
+pub fn habit_score_for_count(habit: &Habit, count: u32) -> f64 {
+    if count == 0 {
+        return 0.0;
+    }
+
+    let (_, value_weights) = normalized_habit_weighted_settings(habit);
+    let fallback = value_weights.last().copied().unwrap_or(1.0);
+    (0..count as usize)
+        .map(|index| value_weights.get(index).copied().unwrap_or(fallback))
+        .sum()
+}
+
+pub fn habit_is_done_on(habit: &Habit, date: &str) -> bool {
+    let count = habit.completions.get(date).copied().unwrap_or(0);
+    habit_score_for_count(habit, count) >= habit_target_score(habit)
+}
+
+pub fn habit_goal_completions(habit: &Habit) -> HashMap<String, bool> {
+    habit
+        .completions
+        .keys()
+        .filter(|date| habit_is_done_on(habit, date))
+        .map(|date| (date.clone(), true))
+        .collect()
 }
 
 // ── Dever ─────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod habit_tests {
+    use super::*;
+
+    #[test]
+    fn deserializes_legacy_boolean_completions_with_default_settings() {
+        let habit: Habit = serde_json::from_str(
+            r#"{
+            "id": "habit-legacy",
+            "title": "Anki",
+            "active": true,
+            "createdAt": "2026-04-01T00:00:00.000Z",
+            "completions": { "2026-04-28": true }
+        }"#,
+        )
+        .unwrap();
+
+        assert_eq!(habit.times_per_day, 1);
+        assert_eq!(habit.value_weights, vec![1.0]);
+        assert_eq!(habit.completions.get("2026-04-28"), Some(&1));
+    }
+
+    #[test]
+    fn preserves_weighted_habit_settings_and_numeric_completions() {
+        let habit: Habit = serde_json::from_str(
+            r#"{
+            "id": "habit-weighted",
+            "title": "Escovar os dentes",
+            "active": true,
+            "createdAt": "2026-04-01T00:00:00.000Z",
+            "timesPerDay": 3,
+            "valueWeights": [5, 2, 1],
+            "completions": { "2026-04-28": 2 }
+        }"#,
+        )
+        .unwrap();
+
+        assert_eq!(habit.times_per_day, 3);
+        assert_eq!(habit.value_weights, vec![5.0, 2.0, 1.0]);
+        assert_eq!(habit.completions.get("2026-04-28"), Some(&2));
+        assert!(!habit_is_done_on(&habit, "2026-04-28"));
+    }
+
+    #[test]
+    fn marks_weighted_goal_completion_only_when_target_score_is_met() {
+        let mut habit = Habit {
+            id: "habit-weighted".to_string(),
+            title: "Escovar os dentes".to_string(),
+            category: None,
+            active: true,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+            times_per_day: 3,
+            value_weights: vec![5.0, 2.0, 1.0],
+            completions: HashMap::from([
+                ("2026-04-27".to_string(), 2),
+                ("2026-04-28".to_string(), 3),
+            ]),
+        };
+
+        let goal_completions = habit_goal_completions(&habit);
+        assert_eq!(goal_completions.get("2026-04-27"), None);
+        assert_eq!(goal_completions.get("2026-04-28"), Some(&true));
+
+        habit.completions.insert("2026-04-29".to_string(), 4);
+        assert_eq!(habit_score_for_count(&habit, 4), 9.0);
+        assert!(habit_is_done_on(&habit, "2026-04-29"));
+    }
+
+    #[test]
+    fn scoring_normalizes_malformed_weighted_settings() {
+        let habit = Habit {
+            id: "habit-malformed".to_string(),
+            title: "Anki".to_string(),
+            category: None,
+            active: true,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+            times_per_day: 0,
+            value_weights: vec![],
+            completions: HashMap::new(),
+        };
+
+        assert_eq!(habit_target_score(&habit), 1.0);
+        assert_eq!(habit_score_for_count(&habit, 1), 1.0);
+        assert!(!habit_is_done_on(&habit, "2026-04-28"));
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeverCompletion {
@@ -110,9 +297,12 @@ impl Dever {
     /// Returns the inicio timestamp, falling back to createdAt for legacy data.
     pub fn inicio_or_created(&self) -> &str {
         match self {
-            Dever::Once { inicio, created_at, .. } | Dever::Cyclic { inicio, created_at, .. } => {
-                inicio.as_deref().unwrap_or(created_at)
+            Dever::Once {
+                inicio, created_at, ..
             }
+            | Dever::Cyclic {
+                inicio, created_at, ..
+            } => inicio.as_deref().unwrap_or(created_at),
         }
     }
 }
@@ -196,8 +386,7 @@ pub fn compute_streaks(
 
     // Parse created_at — take first 10 chars (date part of ISODateTime)
     let created_str = &created_at[..created_at.len().min(10)];
-    let created_date = NaiveDate::parse_from_str(created_str, "%Y-%m-%d")
-        .unwrap_or(today_date);
+    let created_date = NaiveDate::parse_from_str(created_str, "%Y-%m-%d").unwrap_or(today_date);
 
     // Filter completions: only dates <= today and value == true
     let is_done = |d: &NaiveDate| -> bool {
@@ -360,11 +549,23 @@ pub struct ProjetoProgress {
 pub fn compute_projeto_progress(projeto: &Projeto) -> ProjetoProgress {
     let total = projeto.etapas.len();
     if total == 0 {
-        return ProjetoProgress { completed: 0, total: 0, percent: 0 };
+        return ProjetoProgress {
+            completed: 0,
+            total: 0,
+            percent: 0,
+        };
     }
-    let completed = projeto.etapas.iter().filter(|e| e.status == EtapaStatus::Done).count();
+    let completed = projeto
+        .etapas
+        .iter()
+        .filter(|e| e.status == EtapaStatus::Done)
+        .count();
     let percent = ((completed as f64 / total as f64) * 100.0).round() as u32;
-    ProjetoProgress { completed, total, percent }
+    ProjetoProgress {
+        completed,
+        total,
+        percent,
+    }
 }
 
 /// Returns etapas that are actionable: not done, all dependencies satisfied.

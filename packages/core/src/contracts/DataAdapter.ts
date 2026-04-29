@@ -29,6 +29,7 @@ import type {
   CompraItemPatch,
 } from '../models/compra.js';
 import type { HabitStreakInfo } from '../domain/streaks.js';
+import type { HabitDayProgressSummary, HabitProgress } from '../domain/habits.js';
 import type { ProjetoProgress } from '../domain/projeto.js';
 
 // ── Result type ───────────────────────────────────────────────────────────────
@@ -47,8 +48,10 @@ export interface TodaySnapshot {
   habits: Array<{
     habit: Habit;
     isDone: boolean;
+    progress: HabitProgress;
     streak: HabitStreakInfo;
   }>;
+  habitProgress: HabitDayProgressSummary;
   /**
    * All deveres due today (recurrence fires today) + overdue once-deveres.
    * Ordering: overdue first, then due-today; within each group: high → medium → low.
@@ -127,13 +130,10 @@ export interface DataAdapter {
     patch: Partial<HabitInput & { active: boolean }>,
   ): Promise<Result<Habit>>;
 
-  /**
-   * Records that a habit was completed on the given date.
-   * Idempotent: marking an already-completed date is a no-op.
-   */
+  /** Adds one completed occurrence for a habit on the given date. */
   markHabitDone(id: HabitId, date: ISODate): Promise<Result<Habit>>;
 
-  /** Removes the completion for the given date. Idempotent. */
+  /** Removes one completed occurrence for the given date. Idempotent at zero. */
   unmarkHabitDone(id: HabitId, date: ISODate): Promise<Result<Habit>>;
 
   /** Soft-deletes a habit (sets active: false). */

@@ -1,59 +1,84 @@
 # AGENTS.md
 
-Leia este arquivo antes de fazer qualquer mudança no projeto.
+Leia este arquivo antes de fazer qualquer mudanca no projeto.
 
-## O que é esse projeto
+## O que e esse projeto
 
-`planner-app` é um app web de planejamento pessoal single-user. Ele rastreia:
+`planner-app` e um app web de planejamento pessoal single-user. Ele rastreia:
 
-- **Hábitos** — comportamentos diários repetidos infinitamente (ex: Anki, exercício)
-- **Deveres** — tarefas a fazer, podendo ser únicas (`once`) ou cíclicas (`cyclic`)
-- **Hoje** — view unificada com hábitos do dia + deveres devidos/atrasados
+- **Habitos** - comportamentos diarios repetidos infinitamente (ex: Anki, exercicio)
+- **Deveres** - tarefas a fazer, podendo ser unicas (`once`) ou ciclicas (`cyclic`)
+- **Hoje** - view unificada com habitos do dia + deveres devidos/atrasados
 
 No MVP, o app roda 100% no browser com `localStorage`. O contrato de dados foi projetado para trocar o adapter local por um servidor remoto sem reescrever a UI.
 
-## Mapa de diretórios
+## Mapa de diretorios
 
-| Caminho | Propósito |
+| Caminho | Proposito |
 |---|---|
-| `packages/core/` | Types, schemas Zod, contrato `DataAdapter`, funções puras |
-| `packages/core/src/contracts/DataAdapter.ts` | **O CONTRATO** — leia antes de tocar em qualquer data flow |
+| `packages/core/` | Types, schemas Zod, contrato `DataAdapter`, funcoes puras |
+| `packages/core/src/contracts/DataAdapter.ts` | **O CONTRATO** - leia antes de tocar em qualquer data flow |
 | `packages/core/src/models/` | Interfaces `Habit`, `OnceDever`, `CyclicDever` e schemas Zod |
-| `packages/core/src/domain/recurrence.ts` | `isOccurrenceOn()` — lógica pura de agendamento, com testes |
-| `apps/web/src/adapter.ts` | **ÚNICO ponto** onde o adapter concreto é instanciado |
+| `packages/core/src/domain/recurrence.ts` | `isOccurrenceOn()` - logica pura de agendamento, com testes |
+| `apps/web/src/adapter.ts` | **UNICO ponto** onde o adapter concreto e instanciado |
 | `apps/web/src/adapters/` | `LocalStorageAdapter` (MVP) e `RestApiAdapter` (stub Phase 2) |
 | `apps/web/src/hooks/` | Hooks React que consomem o adapter |
 | `apps/web/src/pages/` | `HojePage`, `HabitsPage`, `DeveresPage` |
-| `docs/` | Arquitetura, data model, MVP spec, roadmap, decisões |
-| `specs/` | Specs de feature no formato Dado/Quando/Então |
+| `apps/web/src/test/` | Setup, fakes, builders e testes de integracao React do frontend |
+| `docs/` | Arquitetura, data model, MVP spec, roadmap, decisoes |
+| `docs/TESTING.md` | Arquitetura de testes, naming e policy de coverage |
+| `docs/TEST_FILE_CHECKLIST.md` | Checklist dos arquivos existentes e dos testes esperados |
+| `specs/` | Specs de feature no formato Dado/Quando/Entao |
+| `tests/contracts/` | Suite compartilhada de contrato e fixtures cross-package |
+| `tests/e2e/` | Fluxos ponta a ponta e regressao de jornada |
 
 ## Antes de tocar nos modelos de dados
 
-Leia `docs/DATA_MODEL.md`. Os schemas Zod são co-localizados com as interfaces TypeScript no mesmo arquivo. Ao adicionar um campo a uma interface, atualize o schema Zod correspondente no mesmo arquivo.
+Leia `docs/DATA_MODEL.md`. Os schemas Zod sao co-localizados com as interfaces TypeScript no mesmo arquivo. Ao adicionar um campo a uma interface, atualize o schema Zod correspondente no mesmo arquivo.
 
 ## Antes de tocar no data access
 
 Leia `packages/core/src/contracts/DataAdapter.ts`. Todo acesso a dados no frontend passa por essa interface. Nunca importe `LocalStorageAdapter` ou `RestApiAdapter` fora de `apps/web/src/adapter.ts`.
 
+## Antes de tocar nos testes ou no coverage
+
+Leia `docs/TESTING.md`. Ele define onde cada tipo de teste mora, convencoes de naming, doubles permitidos e a policy de 100% de coverage por arquivo.
+
+Use `docs/TEST_FILE_CHECKLIST.md` para escolher o proximo arquivo sem teste e marcar progresso conforme os testes forem criados.
+
 ## Antes de criar uma feature nova
 
-Verifique `specs/` para um spec file existente. Se não existir, crie um usando o formato definido em `specs/README.md` antes de escrever código.
+Verifique `specs/` para um spec file existente. Se nao existir, crie um usando o formato definido em `specs/README.md` antes de escrever codigo.
 
 ## Regras de arquitetura
 
-- `packages/core` tem **zero** dependências de browser APIs, `localStorage`, `fetch` ou React
-- `packages/core` contém apenas modelos, schemas, contratos e funções puras
+- `packages/core` tem **zero** dependencias de browser APIs, `localStorage`, `fetch` ou React
+- `packages/core` contem apenas modelos, schemas, contratos e funcoes puras
 - `apps/web` importa de `packages/core` mas nunca de `apps/server`
-- A UI depende apenas de `DataAdapter` — nunca de classes concretas de adapter
-- Todos os valores de data em modelos são strings `YYYY-MM-DD` (`ISODate`) ou ISO completo (`ISODateTime`)
-- IDs são `crypto.randomUUID()` — branded types evitam mistura de IDs de entidades distintas
-- Todos os métodos do adapter retornam `Promise<Result<T>>` — nunca lançam exceção além da fronteira do adapter
-- `updateDever` não pode alterar `type` ou `recurrence` — para mudar, arquivar e recriar
+- A UI depende apenas de `DataAdapter` - nunca de classes concretas de adapter
+- Todos os valores de data em modelos sao strings `YYYY-MM-DD` (`ISODate`) ou ISO completo (`ISODateTime`)
+- IDs sao `crypto.randomUUID()` - branded types evitam mistura de IDs de entidades distintas
+- Todos os metodos do adapter retornam `Promise<Result<T>>` - nunca lancam excecao alem da fronteira do adapter
+- `updateDever` nao pode alterar `type` ou `recurrence` - para mudar, arquivar e recriar
+
+## Regras de testes
+
+- Meta obrigatoria: 100% de coverage de `lines`, `statements`, `functions` e `branches`, com threshold por arquivo
+- Todo arquivo de producao novo ou alterado deve sair no mesmo change com testes cobrindo o comportamento alterado
+- Todo bugfix deve comecar por um teste de regressao que falha antes da correcao
+- Testes unitarios de funcoes puras, schemas Zod e helpers sem React ficam co-localizados ao lado do arquivo como `*.test.ts` ou `*.test.tsx`
+- Hooks, pages e componentes React que precisem renderizacao, router, provider ou doubles do adapter ficam em `apps/web/src/test/{hooks,pages,components}/`
+- Cada implementacao de adapter deve ter um arquivo `*.contract.test.ts` ao lado da implementacao; a suite compartilhada do contrato fica em `tests/contracts/`
+- Fluxos ponta a ponta ficam em `tests/e2e/*.e2e.ts`
+- Fixtures, builders e fakes compartilhados nao devem ficar misturados com codigo de runtime sem necessidade; use `tests/` ou `apps/web/src/test/`
+- Nao criar novas pastas `__tests__` quando houver uma localizacao definida em `docs/TESTING.md`
+- Nao usar snapshots cegos como substituto de assertions semanticas
+- Mockar rede, tempo, UUID, `localStorage` e ambiente apenas nas fronteiras; manter `packages/core` com o minimo de mocking possivel
 
 ## Comandos comuns
 
 ```bash
-# Instalar todas as dependências do workspace
+# Instalar todas as dependencias do workspace
 pnpm install
 
 # Frontend dev server (porta 5173)
@@ -68,39 +93,44 @@ pnpm -r test
 # Build do frontend
 pnpm --filter web build
 
-# Typecheck só do core
+# Typecheck so do core
 pnpm --filter core typecheck
 
-# Testes só do core
+# Testes so do core
 pnpm --filter core test
 ```
 
 ## Workflow de spec-driven development
 
-Para qualquer mudança não-trivial:
+Para qualquer mudanca nao-trivial:
 
 1. Verifique `specs/` para um spec existente
-2. Se não existir, crie um spec (formato em `specs/README.md`)
+2. Se nao existir, crie um spec (formato em `specs/README.md`)
 3. Implemente contra os acceptance criteria do spec
-4. Marque os critérios como concluídos no spec ao terminar
+4. Marque os criterios como concluidos no spec ao terminar
 
-Mudanças triviais (copy, ajustes de estilo, renomeações simples): spec opcional.
+Mudancas triviais (copy, ajustes de estilo, renomeacoes simples): spec opcional.
 
-## O que está no MVP
+## Entrega de installer
 
-- Hábitos: criar, listar, check-off diário, desmarcar, arquivar
-- Deveres: criar (`once` e `cyclic`), listar, marcar ocorrência como feita, desmarcar, arquivar
-- Hoje view: hábitos ativos + deveres devidos/overdue do dia
+- Ao concluir qualquer feature ou bugfix, gere o installer desktop correspondente e avise o usuario que o artefato foi atualizado.
+- Use `pnpm build:desktop-no-server` como padrao, a menos que a mudanca exija explicitamente a variante com servidor.
 
-## O que NÃO está no MVP
+## O que esta no MVP
+
+- Habitos: criar, listar, check-off diario, desmarcar, arquivar
+- Deveres: criar (`once` e `cyclic`), listar, marcar ocorrencia como feita, desmarcar, arquivar
+- Hoje view: habitos ativos + deveres devidos/overdue do dia
+
+## O que NAO esta no MVP
 
 - Servidor remoto (Phase 2)
-- Autenticação
+- Autenticacao
 - Sync entre dispositivos
 - Progress tracking (%, etapas)
-- Streaks de hábitos
-- Revisão semanal
-- Rastreamento de nutrição
+- Streaks de habitos
+- Revisao semanal
+- Rastreamento de nutricao
 - Export CSV
 
-Se você encontrar referências a esses tópicos, são features de Phase 2+.
+Se voce encontrar referencias a esses topicos, sao features de Phase 2+.

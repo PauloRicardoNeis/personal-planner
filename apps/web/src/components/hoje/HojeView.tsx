@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import type { TodaySnapshot, ISODate, HabitId, DeverId } from '@planner/core';
+import { HabitProgressBar } from '../habits/HabitProgressBar.js';
 
 interface Props {
   snapshot: TodaySnapshot;
-  onToggleHabit: (id: HabitId, isDone: boolean) => void;
+  onMarkHabit: (id: HabitId) => void;
+  onUnmarkHabit: (id: HabitId) => void;
   onToggleDever: (id: DeverId, occurrenceDate: ISODate, isDone: boolean) => void;
 }
 
@@ -25,7 +27,7 @@ const sectionTitleStyle: React.CSSProperties = {
   marginBottom: 14,
 };
 
-export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
+export function HojeView({ snapshot, onMarkHabit, onUnmarkHabit, onToggleDever }: Props) {
   const navigate = useNavigate();
   const hasHabits = snapshot.habits.length > 0;
   const hasDeveres = snapshot.deveres.length > 0;
@@ -43,7 +45,7 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
         border: '1px solid var(--border)',
       }}>
         <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-          Nada para hoje. Adicione hábitos ou tarefas!
+          Nada para hoje. Adicione habitos ou tarefas.
         </p>
       </div>
     );
@@ -51,61 +53,76 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-      {/* Habits + Deveres side by side */}
       {(hasHabits || hasDeveres) && (
         <div style={{
           display: 'grid',
           gridTemplateColumns: hasBoth ? '1fr 1fr' : '1fr',
           gap: 16,
         }}>
-
           {hasHabits && (
             <section style={cardStyle}>
-              <h2 style={sectionTitleStyle}>Hábitos</h2>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {snapshot.habits.map(({ habit, isDone, streak }) => (
-                  <li key={habit.id} style={itemStyle}>
-                    <button
-                      onClick={() => onToggleHabit(habit.id, isDone)}
-                      style={checkStyle(isDone)}
-                      aria-label={isDone ? 'Desmarcar' : 'Marcar como feito'}
-                    >
-                      {isDone ? '✓' : ''}
-                    </button>
-                    <span style={{
-                      textDecoration: isDone ? 'line-through' : 'none',
-                      color: isDone ? 'var(--text-done)' : 'var(--text)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                      flex: 1,
-                      fontWeight: 500,
-                      fontSize: 14,
-                      lineHeight: 1.4,
-                    }}>
-                      {habit.title}
-                      {habit.category && (
-                        <span style={{
-                          color: 'var(--text-badge)',
-                          background: 'var(--bg-badge)',
-                          fontSize: 11,
-                          padding: '1px 7px',
-                          borderRadius: 'var(--radius-xs)',
-                          fontWeight: 500,
-                        }}>{habit.category}</span>
-                      )}
-                      {streak.currentStreak > 0 && (
-                        <span style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: streak.atRisk ? 'var(--streak-risk)' : 'var(--streak-fire)',
-                        }}>
-                          {streak.atRisk ? '⚠️' : '🔥'} {streak.currentStreak}
-                        </span>
-                      )}
+              <h2 style={sectionTitleStyle}>Habitos</h2>
+              {snapshot.habitProgress.targetScore > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12, marginBottom: 7 }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>
+                      {snapshot.habitProgress.doneHabits}/{snapshot.habitProgress.totalHabits} metas
                     </span>
+                    <span style={{ color: 'var(--text)', fontWeight: 800 }}>
+                      {snapshot.habitProgress.percent}%
+                    </span>
+                  </div>
+                  <HabitProgressBar progress={snapshot.habitProgress} height={7} />
+                </div>
+              )}
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {snapshot.habits.map(({ habit, progress, streak }) => (
+                  <li key={habit.id} style={itemStyle}>
+                    <div style={habitCounterStyle}>
+                      <button
+                        onClick={() => onUnmarkHabit(habit.id)}
+                        disabled={progress.count === 0}
+                        style={habitStepStyle(progress.count > 0)}
+                        aria-label="Remover uma ocorrencia"
+                        title="Remover uma ocorrencia"
+                      >
+                        -
+                      </button>
+                      <span style={habitCountStyle(progress.isDone)}>{progress.count}</span>
+                      <button
+                        onClick={() => onMarkHabit(habit.id)}
+                        style={habitStepStyle(true)}
+                        aria-label="Registrar uma ocorrencia"
+                        title="Registrar uma ocorrencia"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={habitTitleStyle(progress.isDone)}>
+                        {habit.title}
+                        {habit.category && (
+                          <span style={badgeStyle}>{habit.category}</span>
+                        )}
+                        {streak.currentStreak > 0 && (
+                          <span style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: streak.atRisk ? 'var(--streak-risk)' : 'var(--streak-fire)',
+                          }}>
+                            {streak.atRisk ? 'risco' : 'serie'} {streak.currentStreak}
+                          </span>
+                        )}
+                      </div>
+                      <div style={habitMetaStyle}>
+                        <span>{progress.count}/{progress.targetCount} vezes</span>
+                        <span>{formatNumber(progress.score)}/{formatNumber(progress.targetScore)} pts</span>
+                        {progress.overchargeScore > 0 && (
+                          <span style={{ color: '#06b6d4' }}>+{formatNumber(progress.overchargeScore)} over</span>
+                        )}
+                      </div>
+                      <HabitProgressBar progress={progress} height={5} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -150,14 +167,7 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
                           </span>
                         )}
                         {dever.area && (
-                          <span style={{
-                            fontSize: 11,
-                            color: 'var(--text-badge)',
-                            background: 'var(--bg-badge)',
-                            padding: '1px 7px',
-                            borderRadius: 'var(--radius-xs)',
-                            fontWeight: 500,
-                          }}>
+                          <span style={badgeStyle}>
                             {dever.area}
                           </span>
                         )}
@@ -168,11 +178,9 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
               </ul>
             </section>
           )}
-
         </div>
       )}
 
-      {/* Nutrition */}
       {snapshot.nutritionSummary && (
         <section
           style={{ ...cardStyle, cursor: 'pointer', transition: 'box-shadow var(--transition)' }}
@@ -180,16 +188,15 @@ export function HojeView({ snapshot, onToggleHabit, onToggleDever }: Props) {
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-hover)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card)'; }}
         >
-          <h2 style={sectionTitleStyle}>Nutrição</h2>
+          <h2 style={sectionTitleStyle}>Nutricao</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 16 }}>
             <CompactMacro label="Calorias" current={snapshot.nutritionSummary.calories} target={snapshot.nutritionSummary.caloriesTarget} percent={snapshot.nutritionSummary.caloriesPercent} unit="kcal" />
-            <CompactMacro label="Proteína" current={snapshot.nutritionSummary.protein} target={snapshot.nutritionSummary.proteinTarget} percent={snapshot.nutritionSummary.proteinPercent} unit="g" />
+            <CompactMacro label="Proteina" current={snapshot.nutritionSummary.protein} target={snapshot.nutritionSummary.proteinTarget} percent={snapshot.nutritionSummary.proteinPercent} unit="g" />
             <CompactMacro label="Carboidratos" current={snapshot.nutritionSummary.carbs} target={snapshot.nutritionSummary.carbsTarget} percent={snapshot.nutritionSummary.carbsPercent} unit="g" />
             <CompactMacro label="Gordura" current={snapshot.nutritionSummary.fat} target={snapshot.nutritionSummary.fatTarget} percent={snapshot.nutritionSummary.fatPercent} unit="g" />
           </div>
         </section>
       )}
-
     </div>
   );
 }
@@ -230,7 +237,7 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
     medium: { bg: 'var(--priority-med-bg)',  text: 'var(--priority-med-text)'  },
     low:    { bg: 'var(--priority-low-bg)',  text: 'var(--priority-low-text)'  },
   };
-  const labels = { high: 'alta', medium: 'média', low: 'baixa' };
+  const labels = { high: 'alta', medium: 'media', low: 'baixa' };
   const c = vars[priority];
   return (
     <span style={{
@@ -246,12 +253,90 @@ function PriorityBadge({ priority }: { priority: 'low' | 'medium' | 'high' }) {
   );
 }
 
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
 const itemStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'flex-start',
   gap: 10,
   padding: '10px 0',
   borderBottom: '1px solid var(--border)',
+};
+
+const badgeStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: 'var(--text-badge)',
+  background: 'var(--bg-badge)',
+  padding: '1px 7px',
+  borderRadius: 'var(--radius-xs)',
+  fontWeight: 500,
+};
+
+const habitCounterStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '22px 30px 22px',
+  gap: 3,
+  alignItems: 'center',
+  flexShrink: 0,
+  marginTop: 1,
+};
+
+function habitStepStyle(enabled: boolean): React.CSSProperties {
+  return {
+    width: 22,
+    height: 22,
+    borderRadius: 'var(--radius-sm)',
+    border: '1px solid var(--border-input)',
+    background: enabled ? 'var(--bg-card)' : 'var(--progress-bg)',
+    color: enabled ? 'var(--text)' : 'var(--text-muted)',
+    cursor: enabled ? 'pointer' : 'not-allowed',
+    fontSize: 14,
+    fontWeight: 700,
+    lineHeight: 1,
+    opacity: enabled ? 1 : 0.45,
+  };
+}
+
+function habitCountStyle(isDone: boolean): React.CSSProperties {
+  return {
+    height: 22,
+    minWidth: 30,
+    borderRadius: 'var(--radius-sm)',
+    background: isDone ? 'var(--progress-green)' : 'var(--accent-soft)',
+    color: isDone ? '#fff' : 'var(--accent)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 12,
+    fontWeight: 800,
+    fontVariantNumeric: 'tabular-nums',
+  };
+}
+
+function habitTitleStyle(isDone: boolean): React.CSSProperties {
+  return {
+    color: isDone ? 'var(--text-done)' : 'var(--text)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+    fontWeight: 600,
+    fontSize: 14,
+    lineHeight: 1.4,
+  };
+}
+
+const habitMetaStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  flexWrap: 'wrap',
+  color: 'var(--text-muted)',
+  fontSize: 11.5,
+  fontWeight: 600,
+  marginTop: 5,
+  marginBottom: 6,
 };
 
 function checkStyle(isDone: boolean): React.CSSProperties {

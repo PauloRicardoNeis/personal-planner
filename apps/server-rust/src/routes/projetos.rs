@@ -8,10 +8,10 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
-    AppState,
     db::{read_all_projetos, read_projeto_by_id, write_projeto},
-    models::{Etapa, EtapaStatus, Projeto, ProjetoStatus, Priority},
+    models::{Etapa, EtapaStatus, Priority, Projeto, ProjetoStatus},
     routes::{api_err, api_ok, now_iso},
+    AppState,
 };
 
 // ── GET /projetos ────────────────────────────────────────────────────────────
@@ -76,7 +76,11 @@ pub async fn create_projeto(
         description: body.description.filter(|s| !s.trim().is_empty()),
         area: body.area.and_then(|a| {
             let a = a.trim().to_string();
-            if a.is_empty() { None } else { Some(a) }
+            if a.is_empty() {
+                None
+            } else {
+                Some(a)
+            }
         }),
         priority: body.priority,
         status: ProjetoStatus::Planning,
@@ -114,13 +118,27 @@ pub async fn update_projeto(
         return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {id}"));
     };
 
-    if let Some(t) = body.title { projeto.title = t; }
-    if let Some(d) = body.description { projeto.description = if d.trim().is_empty() { None } else { Some(d) }; }
-    if let Some(a) = body.area { projeto.area = if a.trim().is_empty() { None } else { Some(a) }; }
-    if let Some(p) = body.priority { projeto.priority = p; }
-    if let Some(s) = body.status { projeto.status = s; }
-    if let Some(i) = body.inicio { projeto.inicio = Some(i); }
-    if let Some(f) = body.fim { projeto.fim = Some(f); }
+    if let Some(t) = body.title {
+        projeto.title = t;
+    }
+    if let Some(d) = body.description {
+        projeto.description = if d.trim().is_empty() { None } else { Some(d) };
+    }
+    if let Some(a) = body.area {
+        projeto.area = if a.trim().is_empty() { None } else { Some(a) };
+    }
+    if let Some(p) = body.priority {
+        projeto.priority = p;
+    }
+    if let Some(s) = body.status {
+        projeto.status = s;
+    }
+    if let Some(i) = body.inicio {
+        projeto.inicio = Some(i);
+    }
+    if let Some(f) = body.fim {
+        projeto.fim = Some(f);
+    }
 
     write_projeto(&db, &projeto);
     api_ok(projeto)
@@ -128,10 +146,7 @@ pub async fn update_projeto(
 
 // ── POST /projetos/:id/archive ───────────────────────────────────────────────
 
-pub async fn archive_projeto(
-    State(state): State<AppState>,
-    Path(id): Path<String>,
-) -> Response {
+pub async fn archive_projeto(State(state): State<AppState>, Path(id): Path<String>) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut projeto) = read_projeto_by_id(&db, &id) else {
         return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {id}"));
@@ -150,7 +165,10 @@ pub async fn add_etapa(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut projeto) = read_projeto_by_id(&db, &projeto_id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {projeto_id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Projeto not found: {projeto_id}"),
+        );
     };
 
     let max_order = projeto.etapas.iter().map(|e| e.order).max().unwrap_or(-1);
@@ -194,17 +212,27 @@ pub async fn update_etapa(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut projeto) = read_projeto_by_id(&db, &projeto_id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {projeto_id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Projeto not found: {projeto_id}"),
+        );
     };
 
     let Some(etapa) = projeto.etapas.iter_mut().find(|e| e.id == etapa_id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Etapa not found: {etapa_id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Etapa not found: {etapa_id}"),
+        );
     };
 
     let was_done = etapa.status == EtapaStatus::Done;
 
-    if let Some(t) = body.title { etapa.title = t; }
-    if let Some(d) = body.description { etapa.description = if d.trim().is_empty() { None } else { Some(d) }; }
+    if let Some(t) = body.title {
+        etapa.title = t;
+    }
+    if let Some(d) = body.description {
+        etapa.description = if d.trim().is_empty() { None } else { Some(d) };
+    }
     if let Some(s) = body.status {
         // Set completedAt when transitioning to done
         if s == EtapaStatus::Done && !was_done {
@@ -216,9 +244,15 @@ pub async fn update_etapa(
         }
         etapa.status = s;
     }
-    if let Some(dl) = body.deadline { etapa.deadline = Some(dl); }
-    if let Some(eh) = body.effort_hours { etapa.effort_hours = Some(eh); }
-    if let Some(o) = body.order { etapa.order = o; }
+    if let Some(dl) = body.deadline {
+        etapa.deadline = Some(dl);
+    }
+    if let Some(eh) = body.effort_hours {
+        etapa.effort_hours = Some(eh);
+    }
+    if let Some(o) = body.order {
+        etapa.order = o;
+    }
     if let Some(deps) = body.depends_on {
         etapa.depends_on = if deps.is_empty() { None } else { Some(deps) };
     }
@@ -235,7 +269,10 @@ pub async fn remove_etapa(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut projeto) = read_projeto_by_id(&db, &projeto_id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {projeto_id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Projeto not found: {projeto_id}"),
+        );
     };
 
     projeto.etapas.retain(|e| e.id != etapa_id);
@@ -268,7 +305,10 @@ pub async fn reorder_etapas(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut projeto) = read_projeto_by_id(&db, &projeto_id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Projeto not found: {projeto_id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Projeto not found: {projeto_id}"),
+        );
     };
 
     for (i, id) in body.etapa_ids.iter().enumerate() {

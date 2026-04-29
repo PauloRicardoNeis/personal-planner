@@ -8,10 +8,12 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
-    AppState,
-    db::{delete_diary_entry, read_diary_entries_by_date, read_diary_entry_by_id, write_diary_entry},
+    db::{
+        delete_diary_entry, read_diary_entries_by_date, read_diary_entry_by_id, write_diary_entry,
+    },
     models::{DiaryEntry, NutrientsPer100g},
     routes::{api_err, api_ok, now_iso},
+    AppState,
 };
 
 // ── GET /diary?date=YYYY-MM-DD ───────────────────────────────────────────────
@@ -21,10 +23,7 @@ pub struct DiaryQuery {
     pub date: String,
 }
 
-pub async fn get_diary(
-    State(state): State<AppState>,
-    Query(query): Query<DiaryQuery>,
-) -> Response {
+pub async fn get_diary(State(state): State<AppState>, Query(query): Query<DiaryQuery>) -> Response {
     if chrono::NaiveDate::parse_from_str(&query.date, "%Y-%m-%d").is_err() {
         return api_err(StatusCode::BAD_REQUEST, "date must be YYYY-MM-DD");
     }
@@ -63,12 +62,34 @@ pub async fn create_diary_entry(
     let created_at = now_iso();
 
     let entry = match body {
-        CreateDiaryEntryBody::Food { date, food_id, grams, meal } => {
-            DiaryEntry::Food { id, date, food_id, grams, meal, created_at }
-        }
-        CreateDiaryEntryBody::Quick { date, description, grams, nutrients, meal } => {
-            DiaryEntry::Quick { id, date, description, grams, nutrients, meal, created_at }
-        }
+        CreateDiaryEntryBody::Food {
+            date,
+            food_id,
+            grams,
+            meal,
+        } => DiaryEntry::Food {
+            id,
+            date,
+            food_id,
+            grams,
+            meal,
+            created_at,
+        },
+        CreateDiaryEntryBody::Quick {
+            date,
+            description,
+            grams,
+            nutrients,
+            meal,
+        } => DiaryEntry::Quick {
+            id,
+            date,
+            description,
+            grams,
+            nutrients,
+            meal,
+            created_at,
+        },
     };
 
     let db = state.db.lock().unwrap();
@@ -91,19 +112,60 @@ pub async fn update_diary_entry(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(entry) = read_diary_entry_by_id(&db, &id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Diary entry not found: {id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Diary entry not found: {id}"),
+        );
     };
 
     let updated = match entry {
-        DiaryEntry::Food { id, date, food_id, mut grams, mut meal, created_at } => {
-            if let Some(g) = body.grams { grams = g; }
-            if let Some(m) = body.meal { meal = Some(m); }
-            DiaryEntry::Food { id, date, food_id, grams, meal, created_at }
+        DiaryEntry::Food {
+            id,
+            date,
+            food_id,
+            mut grams,
+            mut meal,
+            created_at,
+        } => {
+            if let Some(g) = body.grams {
+                grams = g;
+            }
+            if let Some(m) = body.meal {
+                meal = Some(m);
+            }
+            DiaryEntry::Food {
+                id,
+                date,
+                food_id,
+                grams,
+                meal,
+                created_at,
+            }
         }
-        DiaryEntry::Quick { id, date, description, mut grams, nutrients, mut meal, created_at } => {
-            if let Some(g) = body.grams { grams = g; }
-            if let Some(m) = body.meal { meal = Some(m); }
-            DiaryEntry::Quick { id, date, description, grams, nutrients, meal, created_at }
+        DiaryEntry::Quick {
+            id,
+            date,
+            description,
+            mut grams,
+            nutrients,
+            mut meal,
+            created_at,
+        } => {
+            if let Some(g) = body.grams {
+                grams = g;
+            }
+            if let Some(m) = body.meal {
+                meal = Some(m);
+            }
+            DiaryEntry::Quick {
+                id,
+                date,
+                description,
+                grams,
+                nutrients,
+                meal,
+                created_at,
+            }
         }
     };
 
@@ -119,7 +181,10 @@ pub async fn delete_diary_entry_handler(
 ) -> Response {
     let db = state.db.lock().unwrap();
     let Some(_) = read_diary_entry_by_id(&db, &id) else {
-        return api_err(StatusCode::NOT_FOUND, &format!("Diary entry not found: {id}"));
+        return api_err(
+            StatusCode::NOT_FOUND,
+            &format!("Diary entry not found: {id}"),
+        );
     };
     delete_diary_entry(&db, &id);
     api_ok(serde_json::Value::Null)

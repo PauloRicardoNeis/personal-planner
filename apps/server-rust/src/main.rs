@@ -27,12 +27,16 @@ async fn main() {
     // as a Tauri sidecar). Falls back to ./data relative to cwd for local dev.
     let data_dir = std::env::var("DATA_DIR")
         .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| std::env::current_dir().expect("Cannot determine cwd").join("data"));
+        .unwrap_or_else(|_| {
+            std::env::current_dir()
+                .expect("Cannot determine cwd")
+                .join("data")
+        });
     std::fs::create_dir_all(&data_dir).expect("Failed to create data directory");
 
     // Open (or create) the SQLite database.
-    let conn = rusqlite::Connection::open(data_dir.join("planner.db"))
-        .expect("Failed to open database");
+    let conn =
+        rusqlite::Connection::open(data_dir.join("planner.db")).expect("Failed to open database");
 
     // Enable WAL mode: better read/write concurrency for a local server.
     conn.pragma_update(None, "journal_mode", "WAL")
@@ -77,10 +81,7 @@ async fn main() {
             "/deveres/:id/completions/:occurrence_date",
             delete(routes::deveres::unmark_dever_done),
         )
-        .route(
-            "/deveres/:id/archive",
-            post(routes::deveres::archive_dever),
-        )
+        .route("/deveres/:id/archive", post(routes::deveres::archive_dever))
         // ── Projetos ──────────────────────────────────────────────────────────
         .route(
             "/projetos",
@@ -91,10 +92,7 @@ async fn main() {
             "/projetos/:id/archive",
             post(routes::projetos::archive_projeto),
         )
-        .route(
-            "/projetos/:id/etapas",
-            post(routes::projetos::add_etapa),
-        )
+        .route("/projetos/:id/etapas", post(routes::projetos::add_etapa))
         .route(
             "/projetos/:id/etapas/order",
             put(routes::projetos::reorder_etapas),
@@ -123,7 +121,8 @@ async fn main() {
         )
         .route(
             "/diary/:id",
-            patch(routes::diary::update_diary_entry).delete(routes::diary::delete_diary_entry_handler),
+            patch(routes::diary::update_diary_entry)
+                .delete(routes::diary::delete_diary_entry_handler),
         )
         // ── Nutrition ─────────────────────────────────────────────────────────
         .route(
@@ -147,7 +146,5 @@ async fn main() {
         .expect("Failed to bind port");
 
     println!("[planner-server] listening on http://127.0.0.1:{port}");
-    axum::serve(listener, app)
-        .await
-        .expect("Server error");
+    axum::serve(listener, app).await.expect("Server error");
 }

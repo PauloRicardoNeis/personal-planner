@@ -35,8 +35,9 @@ export function useProjetos() {
   }, [load]);
 
   const updateProjeto = useCallback(async (id: ProjetoId, patch: ProjetoPatch) => {
-    await adapter.updateProjeto(id, patch);
+    const result = await adapter.updateProjeto(id, patch);
     void load();
+    return result;
   }, [load]);
 
   const archiveProjeto = useCallback(async (id: ProjetoId) => {

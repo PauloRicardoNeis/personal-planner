@@ -10,12 +10,13 @@ export function HojePage() {
   const today = todayISODate();
   const navigate = useNavigate();
 
-  async function handleToggleHabit(id: HabitId, isDone: boolean) {
-    if (isDone) {
-      await adapter.unmarkHabitDone(id, today);
-    } else {
-      await adapter.markHabitDone(id, today);
-    }
+  async function handleMarkHabit(id: HabitId) {
+    await adapter.markHabitDone(id, today);
+    void reload();
+  }
+
+  async function handleUnmarkHabit(id: HabitId) {
+    await adapter.unmarkHabitDone(id, today);
     void reload();
   }
 
@@ -45,8 +46,7 @@ export function HojePage() {
   }
 
   const { snapshot } = state;
-  const habitsDone = snapshot.habits.filter((h) => h.isDone).length;
-  const habitsTotal = snapshot.habits.length;
+  const habitProgress = snapshot.habitProgress;
   const deveresPending = snapshot.deveres.filter((d) => !d.isDone).length;
   const ns = snapshot.nutritionSummary;
 
@@ -55,8 +55,9 @@ export function HojePage() {
     {
       icon: '🌿',
       label: 'Hábitos',
-      value: habitsTotal > 0 ? `${habitsDone} / ${habitsTotal}` : 'Nenhum',
-      ...(habitsTotal > 0 ? { progress: habitsDone / habitsTotal } : {}),
+      value: habitProgress.totalHabits > 0 ? `${habitProgress.doneHabits} / ${habitProgress.totalHabits}` : 'Nenhum',
+      ...(habitProgress.targetScore > 0 ? { progress: habitProgress.percent / 100 } : {}),
+      ...(habitProgress.overchargePercent > 0 ? { overchargeProgress: habitProgress.overchargePercent / 100 } : {}),
       link: '/habitos',
     },
     {
@@ -162,7 +163,8 @@ export function HojePage() {
       {/* Detailed view */}
       <HojeView
         snapshot={snapshot}
-        onToggleHabit={handleToggleHabit}
+        onMarkHabit={handleMarkHabit}
+        onUnmarkHabit={handleUnmarkHabit}
         onToggleDever={handleToggleDever}
       />
 

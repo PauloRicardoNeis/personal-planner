@@ -1,0 +1,86 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Planner
+    - navigation [ref=e6]:
+      - link "🎮 Jogos" [ref=e7] [cursor=pointer]:
+        - /url: /jogos
+        - generic [ref=e8]: 🎮
+        - text: Jogos
+      - link "🎬 Filmes" [ref=e9] [cursor=pointer]:
+        - /url: /filmes
+        - generic [ref=e10]: 🎬
+        - text: Filmes
+      - link "◎ Hoje" [ref=e11] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e12]: ◎
+        - text: Hoje
+      - link "✦ Hábitos" [ref=e13] [cursor=pointer]:
+        - /url: /habitos
+        - generic [ref=e14]: ✦
+        - text: Hábitos
+      - link "◻ Deveres" [ref=e15] [cursor=pointer]:
+        - /url: /deveres
+        - generic [ref=e16]: ◻
+        - text: Deveres
+      - link "▣ Projetos" [ref=e17] [cursor=pointer]:
+        - /url: /projetos
+        - generic [ref=e18]: ▣
+        - text: Projetos
+      - link "▦ Calendário" [ref=e19] [cursor=pointer]:
+        - /url: /calendario
+        - generic [ref=e20]: ▦
+        - text: Calendário
+      - link "◈ Nutrição" [ref=e21] [cursor=pointer]:
+        - /url: /nutricao
+        - generic [ref=e22]: ◈
+        - text: Nutrição
+      - link "◇ Alimentos" [ref=e23] [cursor=pointer]:
+        - /url: /alimentos
+        - generic [ref=e24]: ◇
+        - text: Alimentos
+      - link "▧ Livros" [ref=e25] [cursor=pointer]:
+        - /url: /livros
+        - generic [ref=e26]: ▧
+        - text: Livros
+      - link "◉ Perfil" [ref=e27] [cursor=pointer]:
+        - /url: /perfil
+        - generic [ref=e28]: ◉
+        - text: Perfil
+    - generic [ref=e29]:
+      - button "◐ Dinâmico" [ref=e30] [cursor=pointer]:
+        - generic [ref=e31]: ◐
+        - text: Dinâmico
+      - button "⏱ Debug" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: ⏱
+        - text: Debug
+  - main [ref=e35]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - heading "Filmes" [level=1] [ref=e39]
+        - paragraph [ref=e40]: Organize sua watchlist, registre o que já assistiu e mantenha tags pessoais junto dos metadados do TMDB.
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - heading "TMDB" [level=2] [ref=e43]
+          - paragraph [ref=e44]: A busca de filmes usa sua API key do TMDB e salva esse valor apenas no armazenamento local deste app.
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: API key
+            - textbox "API key" [ref=e48]:
+              - /placeholder: Cole sua chave do TMDB
+          - button "Salvar chave" [ref=e49] [cursor=pointer]
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - heading "Adicionar filme" [level=2] [ref=e52]
+          - paragraph [ref=e53]: Busque no TMDB para puxar dados ricos ou use o cadastro manual quando preferir.
+        - generic [ref=e54]:
+          - searchbox "Configure a API key do TMDB para habilitar a busca" [disabled] [ref=e55]
+          - button "Adicionar manual" [ref=e86] [cursor=pointer]
+        - paragraph [ref=e87]: "\"Perfect Days\" adicionado manualmente."
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - button "Para Assistir (0)" [ref=e118] [cursor=pointer]
+          - button "Assistidos (1)" [ref=e119] [cursor=pointer]
+        - button "Todas as tags" [ref=e62] [cursor=pointer]
+      - generic [ref=e63]:
+        - strong [ref=e120]: Sua watchlist ainda está vazia.
+        - paragraph [ref=e121]: Use a busca TMDB ou o cadastro manual acima para começar.

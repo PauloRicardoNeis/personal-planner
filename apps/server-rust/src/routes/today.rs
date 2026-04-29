@@ -6,14 +6,18 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AppState,
-    db::{read_all_deveres, read_all_foods, read_all_habits, read_all_projetos, read_diary_entries_by_date, read_nutrition_profile},
+    db::{
+        read_all_deveres, read_all_foods, read_all_habits, read_all_projetos,
+        read_diary_entries_by_date, read_nutrition_profile,
+    },
     models::{
-        add_targets, compute_daily_targets, compute_portion_nutrients, compute_streaks,
-        compute_projeto_progress, get_next_etapas, zero_targets,
-        Dever, DiaryEntry, Etapa, Habit, HabitStreakInfo, Projeto, ProjetoProgress, ProjetoStatus, Priority, is_occurrence_on,
+        add_targets, compute_daily_targets, compute_portion_nutrients, compute_projeto_progress,
+        compute_streaks, get_next_etapas, habit_goal_completions, habit_is_done_on,
+        is_occurrence_on, zero_targets, Dever, DiaryEntry, Etapa, Habit, HabitStreakInfo, Priority,
+        Projeto, ProjetoProgress, ProjetoStatus,
     },
     routes::{api_err, api_ok},
+    AppState,
 };
 
 // ── Request ───────────────────────────────────────────────────────────────────
@@ -90,10 +94,7 @@ struct TodaySnapshot {
 
 /// GET /today?date=YYYY-MM-DD
 /// Mirrors LocalStorageAdapter#getTodaySnapshot logic.
-pub async fn get_today(
-    State(state): State<AppState>,
-    Query(query): Query<TodayQuery>,
-) -> Response {
+pub async fn get_today(State(state): State<AppState>, Query(query): Query<TodayQuery>) -> Response {
     // Validate date format
     if chrono::NaiveDate::parse_from_str(&query.date, "%Y-%m-%d").is_err() {
         return api_err(StatusCode::BAD_REQUEST, "date must be YYYY-MM-DD");
@@ -107,9 +108,14 @@ pub async fn get_today(
         .into_iter()
         .filter(|h| h.active)
         .map(|habit| {
-            let is_done = habit.completions.get(date.as_str()).copied().unwrap_or(false);
-            let streak = compute_streaks(&habit.completions, date, &habit.created_at);
-            HabitItem { habit, is_done, streak }
+            let is_done = habit_is_done_on(&habit, date);
+            let goal_completions = habit_goal_completions(&habit);
+            let streak = compute_streaks(&goal_completions, date, &habit.created_at);
+            HabitItem {
+                habit,
+                is_done,
+                streak,
+            }
         })
         .collect();
 
@@ -125,7 +131,9 @@ pub async fn get_today(
         }
 
         let (occurrence_date, is_done, is_overdue) = match &dever {
-            Dever::Once { fim, completions, .. } => {
+            Dever::Once {
+                fim, completions, ..
+            } => {
                 if let Some(f) = fim {
                     // Has deadline — show when due or overdue
                     let is_overdue = f.as_str() < date.as_str();
@@ -147,7 +155,12 @@ pub async fn get_today(
                     (date.clone(), false, false)
                 }
             }
-            Dever::Cyclic { recurrence, completions, fim, .. } => {
+            Dever::Cyclic {
+                recurrence,
+                completions,
+                fim,
+                ..
+            } => {
                 // Skip cyclic deveres past their end date
                 if let Some(f) = fim {
                     if f.as_str() < date.as_str() {
@@ -161,7 +174,12 @@ pub async fn get_today(
                 (date.clone(), is_done, false)
             }
         };
-        dever_items.push(DeverItem { dever, occurrence_date, is_done, is_overdue });
+        dever_items.push(DeverItem {
+            dever,
+            occurrence_date,
+            is_done,
+            is_overdue,
+        });
     }
 
     // Sort: overdue first, then by priority (high -> medium -> low)
@@ -194,15 +212,19 @@ pub async fn get_today(
                         zero_targets()
                     }
                 }
-                DiaryEntry::Quick { grams, nutrients, .. } => {
-                    compute_portion_nutrients(nutrients, *grams)
-                }
+                DiaryEntry::Quick {
+                    grams, nutrients, ..
+                } => compute_portion_nutrients(nutrients, *grams),
             };
             totals = add_targets(&totals, &portion);
         }
 
         let pct = |actual: f64, target: f64| -> f64 {
-            if target <= 0.0 { 0.0 } else { (actual / target * 100.0).round() }
+            if target <= 0.0 {
+                0.0
+            } else {
+                (actual / target * 100.0).round()
+            }
         };
 
         NutritionCard {
@@ -228,7 +250,11 @@ pub async fn get_today(
         .map(|projeto| {
             let progress = compute_projeto_progress(&projeto);
             let next_etapas: Vec<Etapa> = get_next_etapas(&projeto).into_iter().cloned().collect();
-            ProjetoItem { projeto, progress, next_etapas }
+            ProjetoItem {
+                projeto,
+                progress,
+                next_etapas,
+            }
         })
         .collect();
 

@@ -16,6 +16,12 @@ import {
   getMonthlyWindowInfo,
   nowISODateTime,
   computeStreaks,
+  computeHabitDayProgress,
+  computeHabitGoalCompletions,
+  computeHabitProgress,
+  decrementHabitCompletion,
+  incrementHabitCompletion,
+  normalizeHabitSettings,
   computePortionNutrients,
   computeDailyTotals,
   computeDailyTargets,
@@ -116,12 +122,14 @@ export class LocalStorageAdapter implements DataAdapter {
 
   async createHabit(input: HabitInput): Promise<Result<Habit>> {
     const habits = this.#readHabits();
+    const settings = normalizeHabitSettings(input);
     const habit: Habit = {
       id: crypto.randomUUID() as HabitId,
       title: input.title,
       ...(input.category !== undefined && { category: input.category }),
       active: true,
       createdAt: nowISODateTime(),
+      ...settings,
       completions: {},
     };
     habits.push(habit);
@@ -134,11 +142,16 @@ export class LocalStorageAdapter implements DataAdapter {
     const idx = habits.findIndex((h) => h.id === id);
     if (idx === -1) return err(`Habit not found: ${id}`);
     const current = habits[idx]!;
+    const settings = normalizeHabitSettings({
+      timesPerDay: patch.timesPerDay ?? current.timesPerDay,
+      valueWeights: patch.valueWeights ?? current.valueWeights,
+    });
     const updated: Habit = {
       ...current,
       ...(patch.title !== undefined && { title: patch.title }),
       ...(patch.category !== undefined && { category: patch.category }),
       ...(patch.active !== undefined && { active: patch.active }),
+      ...settings,
     };
     habits[idx] = updated;
     this.#writeHabits(habits);
@@ -150,7 +163,7 @@ export class LocalStorageAdapter implements DataAdapter {
     const idx = habits.findIndex((h) => h.id === id);
     if (idx === -1) return err(`Habit not found: ${id}`);
     const habit = habits[idx]!;
-    habit.completions[date] = true;
+    habit.completions = incrementHabitCompletion(habit.completions, date);
     this.#writeHabits(habits);
     return ok(habit);
   }
@@ -160,7 +173,7 @@ export class LocalStorageAdapter implements DataAdapter {
     const idx = habits.findIndex((h) => h.id === id);
     if (idx === -1) return err(`Habit not found: ${id}`);
     const habit = habits[idx]!;
-    delete (habit.completions as Record<string, unknown>)[date];
+    habit.completions = decrementHabitCompletion(habit.completions, date);
     this.#writeHabits(habits);
     return ok(habit);
   }
@@ -1079,11 +1092,16 @@ export class LocalStorageAdapter implements DataAdapter {
     const saudeItems = this.#readSaudeItems().filter((item) => item.active);
     const listasCompra = this.#readListasCompra().filter((lista) => lista.active);
 
-    const habitItems: TodaySnapshot['habits'] = habits.map((habit) => ({
-      habit,
-      isDone: habit.completions[date] === true,
-      streak: computeStreaks(habit.completions, date, habit.createdAt),
-    }));
+    const habitItems: TodaySnapshot['habits'] = habits.map((habit) => {
+      const progress = computeHabitProgress(habit, date);
+      return {
+        habit,
+        isDone: progress.isDone,
+        progress,
+        streak: computeStreaks(computeHabitGoalCompletions(habit), date, habit.createdAt),
+      };
+    });
+    const habitProgress = computeHabitDayProgress(habits, date);
 
     const deverItems: TodaySnapshot['deveres'] = [];
 
@@ -1208,6 +1226,7 @@ export class LocalStorageAdapter implements DataAdapter {
     return ok({
       date,
       habits: habitItems,
+      habitProgress,
       deveres: deverItems,
       projetos: projetoItems,
       saude: saudeTodayItems,

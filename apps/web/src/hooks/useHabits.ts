@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { todayISODate, type Habit, type HabitInput, type HabitId, type ISODate } from '@planner/core';
 import { adapter } from '../adapter.js';
+import { normalizeHabitForUi } from '../habitCompatibility.js';
 
 type State =
   | { status: 'loading' }
@@ -13,7 +14,7 @@ export function useHabits() {
   const load = useCallback(async () => {
     const result = await adapter.getHabits();
     if (result.ok) {
-      setState({ status: 'ok', habits: result.data.filter((h) => h.active) });
+      setState({ status: 'ok', habits: result.data.map(normalizeHabitForUi).filter((h) => h.active) });
     } else {
       setState({ status: 'error', message: result.error });
     }
@@ -24,6 +25,12 @@ export function useHabits() {
   const createHabit = useCallback(async (input: HabitInput) => {
     await adapter.createHabit(input);
     void load();
+  }, [load]);
+
+  const updateHabit = useCallback(async (id: HabitId, patch: Partial<HabitInput & { active: boolean }>) => {
+    const result = await adapter.updateHabit(id, patch);
+    void load();
+    return result;
   }, [load]);
 
   const markDone = useCallback(async (id: HabitId, date: ISODate = todayISODate()) => {
@@ -41,5 +48,5 @@ export function useHabits() {
     void load();
   }, [load]);
 
-  return { state, createHabit, markDone, unmarkDone, archive };
+  return { state, createHabit, updateHabit, markDone, unmarkDone, archive };
 }

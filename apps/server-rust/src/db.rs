@@ -1,6 +1,8 @@
 use rusqlite::{params, Connection};
 
-use crate::models::{Dever, DiaryEntry, Food, Game, Habit, NutritionProfile, Projeto, SteamLibrarySettings};
+use crate::models::{
+    Dever, DiaryEntry, Food, Game, Habit, NutritionProfile, Projeto, SteamLibrarySettings,
+};
 
 /// Creates tables if they don't exist. Called once on startup.
 pub fn init(conn: &Connection) {
@@ -119,11 +121,9 @@ pub fn read_all_foods(conn: &Connection) -> Vec<Food> {
 }
 
 pub fn read_food_by_id(conn: &Connection, id: &str) -> Option<Food> {
-    conn.query_row(
-        "SELECT data FROM foods WHERE id = ?1",
-        params![id],
-        |row| row.get::<_, String>(0),
-    )
+    conn.query_row("SELECT data FROM foods WHERE id = ?1", params![id], |row| {
+        row.get::<_, String>(0)
+    })
     .ok()
     .and_then(|json| serde_json::from_str(&json).ok())
 }

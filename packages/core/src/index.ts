@@ -35,8 +35,19 @@ export {
   nowISODateTime,
 } from './models/shared.js';
 
-export type { Habit, HabitInput } from './models/habit.js';
-export { HabitSchema, HabitArraySchema } from './models/habit.js';
+export type { Habit, HabitCompletions, HabitInput, HabitSettings } from './models/habit.js';
+export {
+  DEFAULT_HABIT_TIMES_PER_DAY,
+  DEFAULT_HABIT_VALUE_WEIGHT,
+  MAX_HABIT_TIMES_PER_DAY,
+  HabitSchema,
+  HabitArraySchema,
+  normalizeHabitCompletions,
+  normalizeHabitSettings,
+  normalizeHabitTimesPerDay,
+  normalizeHabitValueWeights,
+  parseHabitValueWeightsInput,
+} from './models/habit.js';
 
 export type {
   DeverCompletion,
@@ -196,6 +207,18 @@ export {
 
 export type { HabitStreakInfo } from './domain/streaks.js';
 export { computeStreaks } from './domain/streaks.js';
+
+export type { HabitDayProgressSummary, HabitProgress } from './domain/habits.js';
+export {
+  computeHabitDayProgress,
+  computeHabitGoalCompletions,
+  computeHabitProgress,
+  computeHabitTargetScore,
+  decrementHabitCompletion,
+  getHabitCompletionCount,
+  incrementHabitCompletion,
+  scoreHabitOccurrences,
+} from './domain/habits.js';
 
 export type { ParsedSteamProfile } from './domain/steam.js';
 export { parseSteamProfile, normalizeSteamOwnedGamesResponse } from './domain/steam.js';

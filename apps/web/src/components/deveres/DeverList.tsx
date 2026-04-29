@@ -1,14 +1,18 @@
-import type { Dever, DeverId, ISODate } from '@planner/core';
+import type { Dever, DeverBase, DeverId, ISODate, Result } from '@planner/core';
 import { DeverCard } from './DeverCard.js';
 
 interface Props {
   deveres: Dever[];
+  onUpdate: (
+    id: DeverId,
+    patch: Partial<Pick<DeverBase, 'title' | 'area' | 'priority' | 'active'>>,
+  ) => Promise<Result<Dever>>;
   onMarkDone: (id: DeverId, occurrenceDate: ISODate) => void;
   onUnmarkDone: (id: DeverId, occurrenceDate: ISODate) => void;
   onArchive: (id: DeverId) => void;
 }
 
-export function DeverList({ deveres, onMarkDone, onUnmarkDone, onArchive }: Props) {
+export function DeverList({ deveres, onUpdate, onMarkDone, onUnmarkDone, onArchive }: Props) {
   if (deveres.length === 0) {
     return <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 24, fontSize: 14 }}>Nenhum dever ainda. Crie o primeiro acima.</p>;
   }
@@ -19,6 +23,7 @@ export function DeverList({ deveres, onMarkDone, onUnmarkDone, onArchive }: Prop
         <DeverCard
           key={dever.id}
           dever={dever}
+          onUpdate={onUpdate}
           onMarkDone={onMarkDone}
           onUnmarkDone={onUnmarkDone}
           onArchive={onArchive}

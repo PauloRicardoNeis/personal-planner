@@ -7,7 +7,6 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AppState,
     db::{
         read_all_foods, read_diary_entries_by_date, read_nutrition_profile, write_nutrition_profile,
     },
@@ -16,6 +15,7 @@ use crate::{
         DiaryEntry, NutritionProfile,
     },
     routes::{api_err, api_ok},
+    AppState,
 };
 
 // ── GET /nutrition/profile ───────────────────────────────────────────────────
@@ -84,9 +84,9 @@ pub async fn get_summary(
                     zero_targets()
                 }
             }
-            DiaryEntry::Quick { grams, nutrients, .. } => {
-                compute_portion_nutrients(nutrients, *grams)
-            }
+            DiaryEntry::Quick {
+                grams, nutrients, ..
+            } => compute_portion_nutrients(nutrients, *grams),
         };
         totals = add_targets(&totals, &portion);
     }

@@ -4,13 +4,15 @@ export interface DashboardCardProps {
   label: string;
   value: string;
   icon?: string;
-  /** 0–1 — when provided, renders a progress bar */
+  /** 0-1. Values above 1 show a full base bar and keep the percent label above 100%. */
   progress?: number;
-  /** route to navigate when the card is clicked */
+  /** Extra 0-1 overlay rendered after the base target is reached. */
+  overchargeProgress?: number;
+  /** Route to navigate when the card is clicked. */
   link?: string;
 }
 
-export function DashboardCard({ label, value, icon, progress, link }: DashboardCardProps) {
+export function DashboardCard({ label, value, icon, progress, overchargeProgress, link }: DashboardCardProps) {
   const navigate = useNavigate();
 
   const barColor =
@@ -49,7 +51,6 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
         transition: 'box-shadow var(--transition), transform var(--transition)',
       }}
     >
-      {/* Icon */}
       {icon && (
         <div style={{
           width: 36,
@@ -66,7 +67,6 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
         </div>
       )}
 
-      {/* Label */}
       <div style={{
         fontSize: 11,
         fontWeight: 600,
@@ -77,33 +77,45 @@ export function DashboardCard({ label, value, icon, progress, link }: DashboardC
         {label}
       </div>
 
-      {/* Value */}
       <div style={{
         fontSize: 22,
         fontWeight: 700,
         color: 'var(--text)',
-        letterSpacing: '-0.3px',
+        letterSpacing: 0,
         lineHeight: 1.25,
       }}>
         {value}
       </div>
 
-      {/* Progress bar */}
       {progress !== undefined && (
         <div style={{ marginTop: 10 }}>
           <div style={{
+            position: 'relative',
             height: 4,
             borderRadius: 2,
             background: 'var(--progress-bg)',
             overflow: 'hidden',
           }}>
             <div style={{
+              position: 'absolute',
+              inset: 0,
               width: `${Math.min(progress, 1) * 100}%`,
               height: '100%',
               borderRadius: 2,
               background: barColor,
               transition: 'width var(--transition-slow)',
             }} />
+            {overchargeProgress !== undefined && overchargeProgress > 0 && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                width: `${Math.min(overchargeProgress, 1) * 100}%`,
+                height: '100%',
+                borderRadius: 2,
+                background: 'linear-gradient(90deg, #10b981, #06b6d4, #f59e0b, #ef4444)',
+                transition: 'width var(--transition-slow)',
+              }} />
+            )}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, textAlign: 'right' }}>
             {Math.round(progress * 100)}%

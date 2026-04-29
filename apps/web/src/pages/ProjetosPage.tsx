@@ -105,6 +105,7 @@ export function ProjetosPage() {
       {state.status === 'ok' && (
         <ProjetoList
           projetos={state.projetos}
+          onEditProjeto={updateProjeto}
           onUpdateStatus={handleUpdateStatus}
           onArchive={handleArchive}
           onAddEtapa={handleAddEtapa}

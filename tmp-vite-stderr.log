@@ -1,0 +1,39 @@
+[2m11:12:15 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../hooks/useHoje" from "src/pages/HojePage.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/paulo/Documents/work/planner-app/apps/web/src/pages/HojePage.tsx[39m:3:24
+[33m  17 |  var _s = $RefreshSig$(), _s2 = $RefreshSig$();
+  18 |  import { useMemo, useState } from "react";
+  19 |  import { useHoje } from "../hooks/useHoje";
+     |                           ^
+  20 |  import { useCalendar } from "../hooks/useCalendar";
+  21 |  import { useHabits } from "../hooks/useHabits";[39m
+      at TransformPluginContext._formatError (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+[2m11:12:15 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "../../theme" from "src/components/hoje/HojeView.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/paulo/Documents/work/planner-app/apps/web/src/components/hoje/HojeView.tsx[39m:3:26
+[33m  15 |    window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+  16 |  }
+  17 |  import { APP_THEME } from "../../theme";
+     |                             ^
+  18 |  export function HojeView({
+  19 |    habits,[39m
+      at TransformPluginContext._formatError (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///C:/Users/paulo/Documents/work/planner-app/node_modules/.pnpm/vite@5.4.21/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+[2m11:12:15 PM[22m [31m[1m[vite][22m[39m Pre-transform error: Failed to resolve import "../../theme" from "src/components/hoje/HojeView.tsx". Does the file exist?

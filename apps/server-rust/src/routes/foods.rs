@@ -8,10 +8,10 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
-    AppState,
     db::{read_all_foods, read_food_by_id, write_food},
     models::{Food, NutrientsPer100g},
     routes::{api_err, api_ok, now_iso},
+    AppState,
 };
 
 // ── GET /foods ────────────────────────────────────────────────────────────────
@@ -51,11 +51,19 @@ pub async fn create_food(
         name: body.name.trim().to_string(),
         brand: body.brand.and_then(|b| {
             let b = b.trim().to_string();
-            if b.is_empty() { None } else { Some(b) }
+            if b.is_empty() {
+                None
+            } else {
+                Some(b)
+            }
         }),
         category: body.category.and_then(|c| {
             let c = c.trim().to_string();
-            if c.is_empty() { None } else { Some(c) }
+            if c.is_empty() {
+                None
+            } else {
+                Some(c)
+            }
         }),
         serving_description: body.serving_description,
         serving_grams: body.serving_grams,
@@ -121,10 +129,7 @@ pub async fn update_food(
 
 // ── POST /foods/:id/archive ──────────────────────────────────────────────────
 
-pub async fn archive_food(
-    State(state): State<AppState>,
-    Path(id): Path<String>,
-) -> Response {
+pub async fn archive_food(State(state): State<AppState>, Path(id): Path<String>) -> Response {
     let db = state.db.lock().unwrap();
     let Some(mut food) = read_food_by_id(&db, &id) else {
         return api_err(StatusCode::NOT_FOUND, &format!("Food not found: {id}"));

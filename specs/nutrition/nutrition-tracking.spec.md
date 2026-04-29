@@ -41,6 +41,13 @@ interface NutrientsPer100g {
   zinc?: number;          // mg
   omega3?: number;        // g (EPA + DHA + ALA)
   cholesterol?: number;   // mg
+  folate?: number;        // mcg
+  vitaminB6?: number;     // mg
+  vitaminE?: number;      // mg
+  vitaminK?: number;      // mcg
+  iodine?: number;        // mcg
+  selenium?: number;      // mcg
+  choline?: number;       // mg
 }
 ```
 
@@ -128,6 +135,13 @@ interface DailyTargets {
   zinc?: number;
   omega3?: number;
   cholesterol?: number;
+  folate?: number;
+  vitaminB6?: number;
+  vitaminE?: number;
+  vitaminK?: number;
+  iodine?: number;
+  selenium?: number;
+  choline?: number;
 }
 ```
 
@@ -184,60 +198,60 @@ function computeDailyTargets(profile: NutritionProfile): DailyTargets;
 
 ### Banco de comidas — CRUD
 
-- [ ] Dado que o usuário preenche nome e pelo menos calorias/proteína/carbs/fat/fibra por 100g, quando salva, então uma comida é criada no banco com ID gerado
+- [x] Dado que o usuário preenche nome e pelo menos calorias/proteína/carbs/fat/fibra por 100g, quando salva, então uma comida é criada no banco com ID gerado
 - [ ] Dado uma comida existente, quando o usuário edita nome ou nutrientes e salva, então a comida é atualizada
-- [ ] Dado uma comida existente, quando o usuário arquiva, então ela não aparece mais nas buscas mas entradas do diário que a referenciam continuam funcionando
+- [x] Dado uma comida existente, quando o usuário arquiva, então ela não aparece mais nas buscas mas entradas do diário que a referenciam continuam funcionando
 - [ ] Dado o banco de comidas, quando o usuário acessa a lista, então vê todas as comidas ativas ordenadas por nome
-- [ ] Dado o banco de comidas com 50+ itens, quando o usuário digita no campo de busca, então a lista filtra por nome em tempo real (client-side)
+- [x] Dado o banco de comidas com 50+ itens, quando o usuário digita no campo de busca, então a lista filtra por nome em tempo real (client-side)
 - [ ] Dado uma comida com `servingDescription: "1 fatia"` e `servingGrams: 30`, quando o usuário a seleciona para adicionar ao diário, então o campo de gramas é pré-preenchido com 30g
 
 ### Diário nutricional — adicionar comida do banco
 
-- [ ] Dado uma comida do banco, quando o usuário a adiciona ao diário de hoje com 150g, então uma `FoodDiaryEntry` é criada com `grams: 150`
-- [ ] Dado uma entrada do diário referenciando uma comida de 200kcal/100g com porção de 150g, então os nutrientes calculados para essa entrada são 300kcal (200 × 150/100)
-- [ ] Dado múltiplas entradas no mesmo dia, quando o usuário visualiza o diário, então vê a lista de entradas agrupadas por refeição (meal) e o total acumulado
+- [x] Dado uma comida do banco, quando o usuário a adiciona ao diário de hoje com 150g, então uma `FoodDiaryEntry` é criada com `grams: 150`
+- [x] Dado uma entrada do diário referenciando uma comida de 200kcal/100g com porção de 150g, então os nutrientes calculados para essa entrada são 300kcal (200 × 150/100)
+- [x] Dado múltiplas entradas no mesmo dia, quando o usuário visualiza o diário, então vê a lista de entradas agrupadas por refeição (meal) e o total acumulado
 - [ ] Dado uma entrada existente, quando o usuário altera a porção de 150g para 200g, então os totais recalculam automaticamente
-- [ ] Dado uma entrada existente, quando o usuário a remove, então ela desaparece e os totais recalculam
+- [x] Dado uma entrada existente, quando o usuário a remove, então ela desaparece e os totais recalculam
 
 ### Diário nutricional — entrada avulsa (quick entry)
 
-- [ ] Dado que o usuário quer registrar algo sem salvar no banco, quando preenche descrição + nutrientes por 100g + gramas consumidas, então uma `QuickDiaryEntry` é criada
-- [ ] Dado uma quick entry com 250kcal/100g e porção de 200g, então os nutrientes calculados são 500kcal
-- [ ] Dado uma quick entry, ela aparece no diário do dia junto com as entradas de comida do banco, sem distinção visual na listagem (apenas ícone diferente ao expandir)
+- [x] Dado que o usuário quer registrar algo sem salvar no banco, quando preenche descrição + nutrientes por 100g + gramas consumidas, então uma `QuickDiaryEntry` é criada
+- [x] Dado uma quick entry com 250kcal/100g e porção de 200g, então os nutrientes calculados são 500kcal
+- [x] Dado uma quick entry, ela aparece no diário do dia junto com as entradas de comida do banco, sem distinção visual na listagem
 - [ ] Dado uma quick entry, o usuário pode editar descrição, nutrientes e gramas a qualquer momento
 
 ### Metas e porcentagens
 
-- [ ] Dado um usuário com peso 80kg e goal "maintain", quando o sistema calcula as metas, então calorias = 2240, proteína = 144g, gordura = 80g, carbs = (2240 - 144×4 - 80×9) / 4 = 236g
-- [ ] Dado um usuário com peso 80kg e goal "cut", quando o sistema calcula as metas, então calorias = 1760, proteína = 176g, gordura = 64g
-- [ ] Dado que o usuário tem `customTargets.protein = 200`, então proteína usa 200g em vez do valor calculado; os outros continuam calculados
-- [ ] Dado o diário de hoje com total de 1500kcal e meta de 2000kcal, então `percentages.calories = 75`
-- [ ] Dado o diário de hoje com total de 2500kcal e meta de 2000kcal, então `percentages.calories = 125` (pode ultrapassar 100%)
-- [ ] Dado um dia sem entradas, todas as porcentagens são 0%
+- [x] Dado um usuário com peso 80kg e goal "maintain", quando o sistema calcula as metas, então calorias = 2240, proteína = 144g, gordura = 80g, carbs = (2240 - 144×4 - 80×9) / 4 = 236g
+- [x] Dado um usuário com peso 80kg e goal "cut", quando o sistema calcula as metas, então calorias = 1760, proteína = 176g, gordura = 64g
+- [x] Dado que o usuário tem `customTargets.protein = 200`, então proteína usa 200g em vez do valor calculado; os outros continuam calculados
+- [x] Dado o diário de hoje com total de 1500kcal e meta de 2000kcal, então `percentages.calories = 75`
+- [x] Dado o diário de hoje com total de 2500kcal e meta de 2000kcal, então `percentages.calories = 125` (pode ultrapassar 100%)
+- [x] Dado um dia sem entradas, todas as porcentagens são 0%
 
 ### Exibição na UI
 
 - [ ] Na view Nutrição do dia, o usuário vê uma barra de progresso para cada macro (calorias, proteína, carbs, gordura, fibra) com o valor atual, meta, e %
 - [ ] Barras de macro que ultrapassem 100% mudam de cor (verde → amarelo em calorias/carbs/fat; verde → verde escuro em proteína/fibra)
 - [ ] Abaixo dos macros, uma seção expansível "Micronutrientes" lista os opcionais que têm meta ou valor > 0
-- [ ] Na view Hoje, um card resumo de nutrição exibe calorias e macros do dia (proteína, carbs, fat) com porcentagens
+- [x] Dado que o usuário tem perfil nutricional e entradas no diário de hoje, quando abre a view Hoje, então vê um card resumo de nutrição com calorias e macros do dia (proteína, carbs, fat) com porcentagens
 - [ ] Na view do banco de comidas, ao clicar numa comida, o usuário vê a tabela nutricional completa por 100g e por porção padrão
 
 ### Exibição no backend (API)
 
-- [ ] `GET /api/foods` retorna todas as comidas ativas do banco
-- [ ] `POST /api/foods` cria uma comida; `PUT /api/foods/:id` atualiza; `DELETE /api/foods/:id` arquiva
-- [ ] `GET /api/diary?date=YYYY-MM-DD` retorna todas as entradas do dia
-- [ ] `POST /api/diary` cria uma entrada; `PUT /api/diary/:id` atualiza; `DELETE /api/diary/:id` remove
-- [ ] `GET /api/nutrition/summary?date=YYYY-MM-DD` retorna `DailyNutritionSummary` com totais, metas e porcentagens calculados
-- [ ] `GET /api/nutrition/profile` retorna o perfil nutricional; `PUT /api/nutrition/profile` atualiza peso/goal/customTargets
-- [ ] Todos os endpoints retornam `Result<T>` no formato padrão `{ ok, data } | { ok, error }`
+- [x] `GET /foods` retorna as comidas persistidas no banco; o filtro de ativas continua sendo aplicado na UI
+- [x] `POST /foods` cria uma comida; `PATCH /foods/:id` atualiza; `POST /foods/:id/archive` arquiva
+- [x] `GET /diary?date=YYYY-MM-DD` retorna todas as entradas do dia
+- [x] `POST /diary` cria uma entrada; `PATCH /diary/:id` atualiza os campos mutáveis suportados (`grams` e `meal`); `DELETE /diary/:id` remove
+- [x] `GET /nutrition/summary?date=YYYY-MM-DD` retorna `DailyNutritionSummary` com totais, metas e porcentagens calculados
+- [x] `GET /nutrition/profile` retorna o perfil nutricional; `PUT /nutrition/profile` atualiza `weightKg`, `goalType` e `customTargets` quando fornecidos
+- [x] Todos os endpoints retornam `Result<T>` no formato padrão `{ ok, data } | { ok, error }`
 
 ### Integração com view Hoje
 
-- [ ] Dado que o usuário tem entradas no diário de hoje, quando abre a view Hoje, então vê um card "Nutrição" com calorias consumidas/meta e barras compactas de P/C/F
+- [x] Dado que o usuário tem perfil nutricional e entradas no diário de hoje, quando abre a view Hoje, então vê um card "Nutrição" com calorias consumidas/meta e barras compactas de P/C/F
 - [ ] Dado que o usuário não configurou o perfil nutricional, o card de nutrição exibe apenas totais sem porcentagens e um link "Configurar perfil"
-- [ ] Dado que o usuário clica no card de nutrição na view Hoje, navega para a view Nutrição do dia completa
+- [x] Dado que o usuário clica no card de nutrição na view Hoje, navega para a view Nutrição do dia completa
 
 ## Funções puras em `packages/core`
 

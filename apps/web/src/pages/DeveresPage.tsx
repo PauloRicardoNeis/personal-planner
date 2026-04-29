@@ -17,7 +17,7 @@ const ALL_WEEKDAYS: { key: WeekdayName; label: string }[] = [
 ];
 
 export function DeveresPage() {
-  const { state, createDever, markDone, unmarkDone, archive } = useDeveres();
+  const { state, createDever, updateDever, markDone, unmarkDone, archive } = useDeveres();
 
   const [title, setTitle] = useState('');
   const [area, setArea] = useState('');
@@ -163,6 +163,7 @@ export function DeveresPage() {
       {state.status === 'ok' && (
         <DeverList
           deveres={state.deveres}
+          onUpdate={updateDever}
           onMarkDone={markDone}
           onUnmarkDone={unmarkDone}
           onArchive={archive}

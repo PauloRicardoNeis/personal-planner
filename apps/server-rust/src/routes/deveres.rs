@@ -8,10 +8,10 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
-    AppState,
     db::{read_all_deveres, read_dever_by_id, write_dever},
     models::{Dever, DeverCompletion, Priority, RecurrenceConfig},
     routes::{api_err, api_ok, now_iso},
+    AppState,
 };
 
 // ── GET /deveres ──────────────────────────────────────────────────────────────
@@ -54,12 +54,22 @@ pub async fn create_dever(
     let created_at = now_iso();
 
     let dever = match body {
-        CreateDeverBody::Once { title, fim, inicio, area, priority } => Dever::Once {
+        CreateDeverBody::Once {
+            title,
+            fim,
+            inicio,
+            area,
+            priority,
+        } => Dever::Once {
             id,
             title: title.trim().to_string(),
             area: area.and_then(|a| {
                 let a = a.trim().to_string();
-                if a.is_empty() { None } else { Some(a) }
+                if a.is_empty() {
+                    None
+                } else {
+                    Some(a)
+                }
             }),
             priority,
             active: true,
@@ -68,12 +78,23 @@ pub async fn create_dever(
             completions: vec![],
             fim,
         },
-        CreateDeverBody::Cyclic { title, recurrence, inicio, fim, area, priority } => Dever::Cyclic {
+        CreateDeverBody::Cyclic {
+            title,
+            recurrence,
+            inicio,
+            fim,
+            area,
+            priority,
+        } => Dever::Cyclic {
             id,
             title: title.trim().to_string(),
             area: area.and_then(|a| {
                 let a = a.trim().to_string();
-                if a.is_empty() { None } else { Some(a) }
+                if a.is_empty() {
+                    None
+                } else {
+                    Some(a)
+                }
             }),
             priority,
             active: true,
@@ -111,23 +132,77 @@ pub async fn update_dever(
     };
 
     let updated = match dever {
-        Dever::Once { id, mut title, mut area, mut priority, mut active, created_at, inicio, completions, fim } => {
-            if let Some(t) = body.title { title = t; }
+        Dever::Once {
+            id,
+            mut title,
+            mut area,
+            mut priority,
+            mut active,
+            created_at,
+            inicio,
+            completions,
+            fim,
+        } => {
+            if let Some(t) = body.title {
+                title = t;
+            }
             if let Some(a) = body.area {
                 area = if a.trim().is_empty() { None } else { Some(a) };
             }
-            if let Some(p) = body.priority { priority = p; }
-            if let Some(ac) = body.active { active = ac; }
-            Dever::Once { id, title, area, priority, active, created_at, inicio, completions, fim }
+            if let Some(p) = body.priority {
+                priority = p;
+            }
+            if let Some(ac) = body.active {
+                active = ac;
+            }
+            Dever::Once {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                completions,
+                fim,
+            }
         }
-        Dever::Cyclic { id, mut title, mut area, mut priority, mut active, created_at, inicio, fim, completions, recurrence } => {
-            if let Some(t) = body.title { title = t; }
+        Dever::Cyclic {
+            id,
+            mut title,
+            mut area,
+            mut priority,
+            mut active,
+            created_at,
+            inicio,
+            fim,
+            completions,
+            recurrence,
+        } => {
+            if let Some(t) = body.title {
+                title = t;
+            }
             if let Some(a) = body.area {
                 area = if a.trim().is_empty() { None } else { Some(a) };
             }
-            if let Some(p) = body.priority { priority = p; }
-            if let Some(ac) = body.active { active = ac; }
-            Dever::Cyclic { id, title, area, priority, active, created_at, inicio, fim, completions, recurrence }
+            if let Some(p) = body.priority {
+                priority = p;
+            }
+            if let Some(ac) = body.active {
+                active = ac;
+            }
+            Dever::Cyclic {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                fim,
+                completions,
+                recurrence,
+            }
         }
     };
 
@@ -168,12 +243,50 @@ pub async fn mark_dever_done(
             completed_at: now_iso(),
         });
         match dever {
-            Dever::Once { id, title, area, priority, active, created_at, inicio, fim, .. } => {
-                Dever::Once { id, title, area, priority, active, created_at, inicio, completions: new_completions, fim }
-            }
-            Dever::Cyclic { id, title, area, priority, active, created_at, inicio, fim, recurrence, .. } => {
-                Dever::Cyclic { id, title, area, priority, active, created_at, inicio, fim, completions: new_completions, recurrence }
-            }
+            Dever::Once {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                fim,
+                ..
+            } => Dever::Once {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                completions: new_completions,
+                fim,
+            },
+            Dever::Cyclic {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                fim,
+                recurrence,
+                ..
+            } => Dever::Cyclic {
+                id,
+                title,
+                area,
+                priority,
+                active,
+                created_at,
+                inicio,
+                fim,
+                completions: new_completions,
+                recurrence,
+            },
         }
     };
 
@@ -200,12 +313,50 @@ pub async fn unmark_dever_done(
         .collect();
 
     let updated = match dever {
-        Dever::Once { id, title, area, priority, active, created_at, inicio, fim, .. } => {
-            Dever::Once { id, title, area, priority, active, created_at, inicio, completions: new_completions, fim }
-        }
-        Dever::Cyclic { id, title, area, priority, active, created_at, inicio, fim, recurrence, .. } => {
-            Dever::Cyclic { id, title, area, priority, active, created_at, inicio, fim, completions: new_completions, recurrence }
-        }
+        Dever::Once {
+            id,
+            title,
+            area,
+            priority,
+            active,
+            created_at,
+            inicio,
+            fim,
+            ..
+        } => Dever::Once {
+            id,
+            title,
+            area,
+            priority,
+            active,
+            created_at,
+            inicio,
+            completions: new_completions,
+            fim,
+        },
+        Dever::Cyclic {
+            id,
+            title,
+            area,
+            priority,
+            active,
+            created_at,
+            inicio,
+            fim,
+            recurrence,
+            ..
+        } => Dever::Cyclic {
+            id,
+            title,
+            area,
+            priority,
+            active,
+            created_at,
+            inicio,
+            fim,
+            completions: new_completions,
+            recurrence,
+        },
     };
 
     write_dever(&db, &updated);
@@ -214,22 +365,57 @@ pub async fn unmark_dever_done(
 
 // ── POST /deveres/:id/archive ─────────────────────────────────────────────────
 
-pub async fn archive_dever(
-    State(state): State<AppState>,
-    Path(id): Path<String>,
-) -> Response {
+pub async fn archive_dever(State(state): State<AppState>, Path(id): Path<String>) -> Response {
     let db = state.db.lock().unwrap();
     let Some(dever) = read_dever_by_id(&db, &id) else {
         return api_err(StatusCode::NOT_FOUND, &format!("Dever not found: {id}"));
     };
 
     let updated = match dever {
-        Dever::Once { id, title, area, priority, created_at, inicio, completions, fim, .. } => {
-            Dever::Once { id, title, area, priority, active: false, created_at, inicio, completions, fim }
-        }
-        Dever::Cyclic { id, title, area, priority, created_at, inicio, fim, completions, recurrence, .. } => {
-            Dever::Cyclic { id, title, area, priority, active: false, created_at, inicio, fim, completions, recurrence }
-        }
+        Dever::Once {
+            id,
+            title,
+            area,
+            priority,
+            created_at,
+            inicio,
+            completions,
+            fim,
+            ..
+        } => Dever::Once {
+            id,
+            title,
+            area,
+            priority,
+            active: false,
+            created_at,
+            inicio,
+            completions,
+            fim,
+        },
+        Dever::Cyclic {
+            id,
+            title,
+            area,
+            priority,
+            created_at,
+            inicio,
+            fim,
+            completions,
+            recurrence,
+            ..
+        } => Dever::Cyclic {
+            id,
+            title,
+            area,
+            priority,
+            active: false,
+            created_at,
+            inicio,
+            fim,
+            completions,
+            recurrence,
+        },
     };
 
     write_dever(&db, &updated);

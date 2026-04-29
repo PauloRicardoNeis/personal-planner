@@ -61,11 +61,11 @@ Registro leve de decisões técnicas e de produto. Formato: contexto → decisã
 **Data:** 2026-03-11
 **Status:** Aceito
 
-**Contexto:** Habits têm check-off binário por dia. Deveres têm ocorrências que precisam de metadados (`occurrenceDate` vs `completedAt`).
+**Contexto:** Habits podem ter uma ou mais ocorrências por dia. Deveres têm ocorrências que precisam de metadados (`occurrenceDate` vs `completedAt`).
 
-**Decisão:** `Habit.completions: Record<ISODate, true>` — sparse map, O(1) lookup, JSON compacto. `Dever.completions: DeverCompletion[]` — array com `occurrenceDate` e `completedAt`.
+**Decisão:** `Habit.completions: Record<ISODate, number>` — sparse map de contagens diárias, O(1) lookup, JSON compacto. `Dever.completions: DeverCompletion[]` — array com `occurrenceDate` e `completedAt`.
 
-**Consequências:** Para habits, ausência no map = não feito (não armazena `false`). Para deveres, histórico rico permite saber quando algo foi concluído vs. quando deveria ter sido.
+**Consequências:** Para habits, ausência no map = zero ocorrências (não armazena `0`). Para deveres, histórico rico permite saber quando algo foi concluído vs. quando deveria ter sido.
 
 ---
 

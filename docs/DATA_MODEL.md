@@ -2,7 +2,7 @@
 
 ## Filosofia de design
 
-- **Sparse map para completions de Hábito** — `Record<ISODate, true>` armazena apenas as datas concluídas. Ausência = não feito. O(1) lookup: `habit.completions[today] === true`. JSON compacto.
+- **Sparse map para completions de Hábito** — `Record<ISODate, number>` armazena apenas dias com ocorrências registradas. Ausência = 0 ocorrências. O(1) lookup: `habit.completions[today] ?? 0`. JSON compacto e compatível com metas de várias vezes por dia.
 - **Array para completions de Dever** — `DeverCompletion[]` armazena `occurrenceDate` (quando era esperado) e `completedAt` (quando foi marcado). Isso permite histórico de quando algo foi concluído vs. quando deveria ter sido.
 - **Discriminated unions** para `Dever` e `RecurrenceConfig` — enforça invariantes em compile time. `OnceDever` não pode ter `recurrence`, `CyclicDever` não pode ter `deadline`.
 - **Branded types para IDs** — evita misturar `HabitId` com `DeverId`. TypeScript captura `markHabitDone(deverId)` em compilação.
@@ -61,16 +61,36 @@ interface Habit {
   category?: string;      // label livre (ex: "saúde", "aprendizado")
   active: boolean;        // false = arquivado, não aparece em listas ativas
   createdAt: ISODateTime; // timestamp de criação
-  // Sparse map: só armazena datas concluídas
-  // habit.completions["2026-03-10"] === true → feito nesse dia
-  // habit.completions["2026-03-11"] === undefined → não feito
-  completions: Record<ISODate, true>;
+  timesPerDay: number;    // meta de ocorrências por dia
+  valueWeights: number[]; // valor de cada ocorrência alvo; extras repetem o último peso
+  // Sparse map: só armazena dias com ao menos uma ocorrência
+  // habit.completions["2026-03-10"] === 2 → feito duas vezes nesse dia
+  // habit.completions["2026-03-11"] === undefined → zero ocorrências
+  completions: Record<ISODate, number>;
 }
 
 type HabitInput = {
   title: string;
   category?: string;
+  timesPerDay?: number;
+  valueWeights?: number[];
 };
+```
+
+## HabitProgress
+
+Calculado on-the-fly por `computeHabitProgress()` e `computeHabitDayProgress()`; não é persistido.
+
+```typescript
+interface HabitProgress {
+  count: number;             // ocorrências registradas no dia
+  targetCount: number;       // meta de vezes por dia
+  score: number;             // soma ponderada das ocorrências
+  targetScore: number;       // soma dos pesos dentro da meta
+  basePercent: number;       // progresso até 100%
+  overchargePercent: number; // excedente após bater a meta
+  isDone: boolean;           // true quando score >= targetScore
+}
 ```
 
 ## Dever
@@ -232,8 +252,10 @@ interface TodaySnapshot {
   habits: Array<{
     habit: Habit;
     isDone: boolean;
+    progress: HabitProgress; // contagem, pontos, meta e overcharge do dia
     streak: HabitStreakInfo;   // streaks calculados on-the-fly
   }>;
+  habitProgress: HabitDayProgressSummary; // resumo ponderado dos hábitos ativos
   deveres: Array<{
     dever: Dever;
     occurrenceDate: ISODate;
