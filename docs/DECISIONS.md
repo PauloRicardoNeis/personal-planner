@@ -20,13 +20,13 @@ Registro leve de decisões técnicas e de produto. Formato: contexto → decisã
 ## ADR-002 — Padrão Adapter para acesso a dados
 
 **Data:** 2026-03-11
-**Status:** Aceito
+**Status:** Aceito; escopo de produto atualizado pelo ADR-013
 
-**Contexto:** MVP usa localStorage, mas o sistema deve suportar um servidor remoto no futuro sem reescrever o frontend.
+**Contexto:** O projeto precisava alternar a origem de dados sem reescrever a UI. Historicamente o browser usou `localStorage` no MVP, mas o produto atual usa desktop + `planner-server` + SQLite.
 
 **Decisão:** Interface `DataAdapter` em `packages/core`. Frontend importa apenas a interface. Implementações concretas ficam em `apps/web/src/adapters/`. Seleção em um único ponto: `apps/web/src/adapter.ts`.
 
-**Consequências:** Pequeno overhead de boilerplate inicial. Troca de backend = zero mudanças na UI. Lógica de negócio (recorrência, ordenação) testável sem React.
+**Consequências:** Pequeno overhead de boilerplate inicial. Troca de backend = zero mudanças na UI. Lógica de negócio (recorrência, ordenação) testável sem React. O `LocalStorageAdapter` fica restrito a desenvolvimento/teste, conforme ADR-013.
 
 ---
 
@@ -91,7 +91,7 @@ Registro leve de decisões técnicas e de produto. Formato: contexto → decisã
 
 **Decisão:** `DataAdapter.getTodaySnapshot(date)` retorna snapshot pré-montado com `isDone`, `isOverdue` e ordenação aplicados. A função pura `isOccurrenceOn` em `domain/recurrence.ts` é usada internamente pelo adapter.
 
-**Consequências:** Hooks React são finos (só chamam o adapter e gerenciam estado). Lógica de agendamento testável com Vitest sem React Testing Library. Quando o servidor for ativado, ele implementa a mesma lógica server-side e expõe `GET /api/today`.
+**Consequências:** Hooks React são finos (só chamam o adapter e gerenciam estado). Lógica de agendamento testável com Vitest sem React Testing Library. No produto desktop, o `planner-server` implementa a mesma lógica server-side e expõe `GET /today`.
 
 ---
 
@@ -157,3 +157,16 @@ Registro leve de decisões técnicas e de produto. Formato: contexto → decisã
 **Decisão:** `computeDailyTargets(profile)` calcula metas base por peso×multiplicador (cut/maintain/bulk). O campo `customTargets?: Partial<DailyTargets>` permite override de qualquer valor calculado.
 
 **Consequências:** Funciona out-of-the-box com fórmulas padrão. Usuários avançados podem customizar individualmente sem perder o cálculo base dos outros campos.
+
+---
+
+## ADR-013 - Desktop + planner-server + SQLite como produto canonico
+
+**Data:** 2026-04-30
+**Status:** Aceito
+
+**Contexto:** O projeto manteve `LocalStorageAdapter` para iteracao rapida no browser, mas o aplicativo que deve ser usado e distribuido e o desktop. Bugs podem ficar escondidos quando uma funcionalidade e validada apenas no `localStorage`.
+
+**Decisao:** A versao correta e final do aplicativo e o desktop Tauri com sidecar Rust `planner-server` e persistencia em SQLite. O frontend web/Vite com `LocalStorageAdapter` existe apenas como harness de desenvolvimento e teste.
+
+**Consequencias:** Features e bugfixes de produto devem ser validados tambem pelo caminho `RestApiAdapter` + `planner-server` + SQLite. O installer padrao e gerado por `pnpm build:desktop` e deve embutir o sidecar.

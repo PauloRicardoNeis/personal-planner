@@ -9,50 +9,15 @@ use axum::{
 use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
 
-// ── Shared state ──────────────────────────────────────────────────────────────
-
-/// The single SQLite connection shared across all request handlers.
-/// `std::sync::Mutex` is safe here because rusqlite operations are synchronous
-/// and we never hold the lock across an `.await` point.
 #[derive(Clone)]
 pub struct AppState {
     pub db: Arc<Mutex<rusqlite::Connection>>,
 }
 
-// ── Entry point ───────────────────────────────────────────────────────────────
-
-#[tokio::main]
-async fn main() {
-    // Data directory: configurable via DATA_DIR env var (required when running
-    // as a Tauri sidecar). Falls back to ./data relative to cwd for local dev.
-    let data_dir = std::env::var("DATA_DIR")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| {
-            std::env::current_dir()
-                .expect("Cannot determine cwd")
-                .join("data")
-        });
-    std::fs::create_dir_all(&data_dir).expect("Failed to create data directory");
-
-    // Open (or create) the SQLite database.
-    let conn =
-        rusqlite::Connection::open(data_dir.join("planner.db")).expect("Failed to open database");
-
-    // Enable WAL mode: better read/write concurrency for a local server.
-    conn.pragma_update(None, "journal_mode", "WAL")
-        .expect("Failed to enable WAL mode");
-
-    db::init(&conn);
-
-    let state = AppState {
-        db: Arc::new(Mutex::new(conn)),
-    };
-
-    // Allow requests from the Vite dev server.
+fn build_app(state: AppState) -> Router {
     let cors = CorsLayer::permissive();
 
-    let app = Router::new()
-        // ── Habits ────────────────────────────────────────────────────────────
+    Router::new()
         .route(
             "/habits",
             get(routes::habits::get_habits).post(routes::habits::create_habit),
@@ -67,7 +32,6 @@ async fn main() {
             delete(routes::habits::unmark_habit_done),
         )
         .route("/habits/:id/archive", post(routes::habits::archive_habit))
-        // ── Deveres ───────────────────────────────────────────────────────────
         .route(
             "/deveres",
             get(routes::deveres::get_deveres).post(routes::deveres::create_dever),
@@ -82,7 +46,6 @@ async fn main() {
             delete(routes::deveres::unmark_dever_done),
         )
         .route("/deveres/:id/archive", post(routes::deveres::archive_dever))
-        // ── Projetos ──────────────────────────────────────────────────────────
         .route(
             "/projetos",
             get(routes::projetos::get_projetos).post(routes::projetos::create_projeto),
@@ -101,7 +64,6 @@ async fn main() {
             "/projetos/:id/etapas/:etapa_id",
             patch(routes::projetos::update_etapa).delete(routes::projetos::remove_etapa),
         )
-        // ── Foods ─────────────────────────────────────────────────────────────
         .route("/games", get(routes::games::get_games))
         .route(
             "/games/steam-settings",
@@ -114,7 +76,6 @@ async fn main() {
         )
         .route("/foods/:id", patch(routes::foods::update_food))
         .route("/foods/:id/archive", post(routes::foods::archive_food))
-        // ── Diary ─────────────────────────────────────────────────────────────
         .route(
             "/diary",
             get(routes::diary::get_diary).post(routes::diary::create_diary_entry),
@@ -124,19 +85,38 @@ async fn main() {
             patch(routes::diary::update_diary_entry)
                 .delete(routes::diary::delete_diary_entry_handler),
         )
-        // ── Nutrition ─────────────────────────────────────────────────────────
         .route(
             "/nutrition/profile",
             get(routes::nutrition::get_profile).put(routes::nutrition::save_profile),
         )
         .route("/nutrition/summary", get(routes::nutrition::get_summary))
-        // ── Today ─────────────────────────────────────────────────────────────
         .route("/today", get(routes::today::get_today))
         .layer(cors)
-        .with_state(state);
+        .with_state(state)
+}
 
-    // Port: configurable via PORT env var (used by Tauri sidecar). Default 3001.
-    // Binds to loopback only — avoids Windows Firewall prompts for a local app.
+#[tokio::main]
+async fn main() {
+    let data_dir = std::env::var("DATA_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| {
+            std::env::current_dir()
+                .expect("Cannot determine cwd")
+                .join("data")
+        });
+    std::fs::create_dir_all(&data_dir).expect("Failed to create data directory");
+
+    let conn =
+        rusqlite::Connection::open(data_dir.join("planner.db")).expect("Failed to open database");
+    conn.pragma_update(None, "journal_mode", "WAL")
+        .expect("Failed to enable WAL mode");
+    db::init(&conn);
+
+    let state = AppState {
+        db: Arc::new(Mutex::new(conn)),
+    };
+    let app = build_app(state);
+
     let port: u16 = std::env::var("PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -147,4 +127,20 @@ async fn main() {
 
     println!("[planner-server] listening on http://127.0.0.1:{port}");
     axum::serve(listener, app).await.expect("Server error");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_app_constructs_router_with_in_memory_state() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        db::init(&conn);
+        let state = AppState {
+            db: Arc::new(Mutex::new(conn)),
+        };
+
+        let _app = build_app(state);
+    }
 }

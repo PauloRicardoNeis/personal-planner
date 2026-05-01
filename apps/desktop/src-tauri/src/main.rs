@@ -11,7 +11,7 @@ struct SidecarHandle(Mutex<Option<tauri_plugin_shell::process::CommandChild>>);
 
 /// Spawns the desktop build process and emits events when it finishes.
 #[tauri::command]
-async fn build_installer(app: tauri::AppHandle, with_server: bool) -> Result<(), String> {
+async fn build_installer(app: tauri::AppHandle, _with_server: bool) -> Result<(), String> {
     let project_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent() // desktop
         .and_then(|p| p.parent()) // apps
@@ -19,11 +19,7 @@ async fn build_installer(app: tauri::AppHandle, with_server: bool) -> Result<(),
         .ok_or("Cannot resolve project root")?
         .to_path_buf();
 
-    let script = if with_server {
-        "build:desktop-with-server"
-    } else {
-        "build:desktop-no-server"
-    };
+    let script = "build:desktop";
 
     let handle = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -84,6 +80,20 @@ enum ParsedSteamProfile {
     SteamId(String),
     Vanity(String),
 }
+
+#[cfg(target_os = "windows")]
+fn stale_sidecar_cleanup_command() -> (&'static str, &'static [&'static str]) {
+    ("taskkill", &["/F", "/IM", "planner-server.exe", "/T"])
+}
+
+#[cfg(target_os = "windows")]
+fn stop_stale_sidecars() {
+    let (program, args) = stale_sidecar_cleanup_command();
+    let _ = std::process::Command::new(program).args(args).output();
+}
+
+#[cfg(not(target_os = "windows"))]
+fn stop_stale_sidecars() {}
 
 fn parse_steam_profile(profile: &str) -> Option<ParsedSteamProfile> {
     let trimmed = profile.trim();
@@ -236,6 +246,11 @@ fn main() {
                 .to_string_lossy()
                 .to_string();
 
+            // Avoid talking to a stale sidecar left behind by an older install.
+            // The frontend uses a fixed localhost port, so an old process on
+            // 3001 would otherwise receive requests meant for this build.
+            stop_stale_sidecars();
+
             match app.shell().sidecar("planner-server") {
                 Ok(cmd) => {
                     match cmd
@@ -245,7 +260,7 @@ fn main() {
                     {
                         Ok((_rx, child)) => {
                             app.manage(SidecarHandle(Mutex::new(Some(child))));
-                            println!("[desktop] sidecar started — API at http://127.0.0.1:3001");
+                            println!("[desktop] sidecar started - API at http://127.0.0.1:3001");
                         }
                         Err(e) => {
                             eprintln!("[desktop] failed to spawn sidecar: {e}");
@@ -254,7 +269,7 @@ fn main() {
                     }
                 }
                 Err(e) => {
-                    // Expected for the no-server build variant or dev mode.
+                    // Expected in dev mode before the sidecar binary has been built.
                     println!("[desktop] no sidecar configured: {e}");
                     app.manage(SidecarHandle(Mutex::new(None)));
                 }
@@ -284,4 +299,18 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn stale_sidecar_cleanup_targets_planner_server_processes() {
+        let (program, args) = stale_sidecar_cleanup_command();
+
+        assert_eq!(program, "taskkill");
+        assert_eq!(args, &["/F", "/IM", "planner-server.exe", "/T"]);
+    }
 }

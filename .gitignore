@@ -6,6 +6,14 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+coverage/
+reports/mutation/
+mutation-report/
+.stryker-tmp/
+mutants.out/
+lcov.info
+*.log
+.playwright-cli/
 
 # Tauri desktop
 apps/desktop/src-tauri/binaries/*.exe

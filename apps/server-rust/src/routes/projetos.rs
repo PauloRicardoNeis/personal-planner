@@ -320,3 +320,324 @@ pub async fn reorder_etapas(
     write_projeto(&db, &projeto);
     api_ok(projeto)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{read_all_projetos, read_projeto_by_id, write_projeto},
+        routes::test_support::{projeto, response_json, test_state},
+    };
+
+    #[tokio::test]
+    async fn create_get_update_and_archive_projetos() {
+        let state = test_state();
+
+        let created = create_projeto(
+            State(state.clone()),
+            Json(CreateProjetoBody {
+                title: "  Projeto novo  ".to_string(),
+                description: Some("   ".to_string()),
+                area: Some(" ".to_string()),
+                priority: Priority::Low,
+                inicio: Some("2026-04-01T00:00:00.000Z".to_string()),
+                fim: Some("2026-05-01".to_string()),
+                etapas: Some(vec![
+                    CreateEtapaBody {
+                        title: " Primeira ".to_string(),
+                        description: Some(" ".to_string()),
+                        deadline: None,
+                        effort_hours: None,
+                        depends_on: Some(vec![]),
+                        order: None,
+                    },
+                    CreateEtapaBody {
+                        title: " Segunda ".to_string(),
+                        description: Some("Descricao".to_string()),
+                        deadline: Some("2026-04-20".to_string()),
+                        effort_hours: Some(2.5),
+                        depends_on: Some(vec!["etapa-anterior".to_string()]),
+                        order: Some(5),
+                    },
+                ]),
+            }),
+        )
+        .await;
+        assert_eq!(created.status(), StatusCode::OK);
+
+        let list = response_json(get_projetos(State(state.clone())).await).await;
+        assert_eq!(list["data"].as_array().unwrap().len(), 1);
+
+        let projeto_id = {
+            let db = state.db.lock().unwrap();
+            let stored = read_all_projetos(&db);
+            assert_eq!(stored[0].title, "Projeto novo");
+            assert_eq!(stored[0].description, None);
+            assert_eq!(stored[0].area, None);
+            assert_eq!(stored[0].status, ProjetoStatus::Planning);
+            assert_eq!(stored[0].etapas[0].title, "Primeira");
+            assert_eq!(stored[0].etapas[0].description, None);
+            assert_eq!(stored[0].etapas[0].depends_on, None);
+            assert_eq!(stored[0].etapas[1].order, 5);
+            stored[0].id.clone()
+        };
+
+        let updated = update_projeto(
+            State(state.clone()),
+            Path(projeto_id.clone()),
+            Json(UpdateProjetoBody {
+                title: Some("Projeto editado".to_string()),
+                description: Some("Descricao editada".to_string()),
+                area: Some("Trabalho".to_string()),
+                priority: Some(Priority::High),
+                status: Some(ProjetoStatus::Active),
+                inicio: Some("2026-04-02T00:00:00.000Z".to_string()),
+                fim: Some("2026-05-02".to_string()),
+            }),
+        )
+        .await;
+        assert_eq!(updated.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, &projeto_id).unwrap();
+            assert_eq!(stored.title, "Projeto editado");
+            assert_eq!(stored.description.as_deref(), Some("Descricao editada"));
+            assert_eq!(stored.area.as_deref(), Some("Trabalho"));
+            assert_eq!(stored.priority, Priority::High);
+            assert_eq!(stored.status, ProjetoStatus::Active);
+        }
+
+        let missing_update = update_projeto(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(UpdateProjetoBody {
+                title: None,
+                description: None,
+                area: None,
+                priority: None,
+                status: None,
+                inicio: None,
+                fim: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_update.status(), StatusCode::NOT_FOUND);
+
+        let archive = archive_projeto(State(state.clone()), Path(projeto_id.clone())).await;
+        assert_eq!(archive.status(), StatusCode::OK);
+        {
+            let db = state.db.lock().unwrap();
+            assert_eq!(
+                read_projeto_by_id(&db, &projeto_id).unwrap().status,
+                ProjetoStatus::Archived
+            );
+        }
+
+        let missing_archive =
+            archive_projeto(State(state.clone()), Path("missing".to_string())).await;
+        assert_eq!(missing_archive.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn etapa_handlers_add_update_remove_reorder_and_report_missing_projects() {
+        let state = test_state();
+        {
+            let db = state.db.lock().unwrap();
+            write_projeto(&db, &projeto("projeto-1", ProjetoStatus::Active));
+        }
+
+        let added = add_etapa(
+            State(state.clone()),
+            Path("projeto-1".to_string()),
+            Json(CreateEtapaBody {
+                title: " Terceira ".to_string(),
+                description: Some(" ".to_string()),
+                deadline: Some("2026-04-30".to_string()),
+                effort_hours: Some(3.0),
+                depends_on: Some(vec![]),
+                order: None,
+            }),
+        )
+        .await;
+        assert_eq!(added.status(), StatusCode::OK);
+
+        let new_etapa_id = {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, "projeto-1").unwrap();
+            let new_etapa = stored.etapas.last().unwrap();
+            assert_eq!(new_etapa.title, "Terceira");
+            assert_eq!(new_etapa.description, None);
+            assert_eq!(new_etapa.depends_on, None);
+            assert_eq!(new_etapa.order, 3);
+            new_etapa.id.clone()
+        };
+
+        let missing_add = add_etapa(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(CreateEtapaBody {
+                title: "Nova".to_string(),
+                description: None,
+                deadline: None,
+                effort_hours: None,
+                depends_on: None,
+                order: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_add.status(), StatusCode::NOT_FOUND);
+
+        let done_update = update_etapa(
+            State(state.clone()),
+            Path(("projeto-1".to_string(), "etapa-2".to_string())),
+            Json(UpdateEtapaBody {
+                title: Some("Segunda editada".to_string()),
+                description: Some("Descricao".to_string()),
+                status: Some(EtapaStatus::Done),
+                deadline: Some("2026-05-10".to_string()),
+                effort_hours: Some(4.0),
+                order: Some(9),
+                depends_on: Some(vec!["etapa-1".to_string()]),
+            }),
+        )
+        .await;
+        assert_eq!(done_update.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, "projeto-1").unwrap();
+            let etapa = stored
+                .etapas
+                .iter()
+                .find(|etapa| etapa.id == "etapa-2")
+                .unwrap();
+            assert_eq!(etapa.status, EtapaStatus::Done);
+            assert!(etapa.completed_at.is_some());
+            assert_eq!(etapa.deadline.as_deref(), Some("2026-05-10"));
+            assert_eq!(etapa.effort_hours, Some(4.0));
+            assert_eq!(etapa.order, 9);
+        }
+
+        let undone_update = update_etapa(
+            State(state.clone()),
+            Path(("projeto-1".to_string(), "etapa-2".to_string())),
+            Json(UpdateEtapaBody {
+                title: None,
+                description: Some("".to_string()),
+                status: Some(EtapaStatus::InProgress),
+                deadline: None,
+                effort_hours: None,
+                order: None,
+                depends_on: Some(vec!["etapa-1".to_string()]),
+            }),
+        )
+        .await;
+        assert_eq!(undone_update.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, "projeto-1").unwrap();
+            let etapa = stored
+                .etapas
+                .iter()
+                .find(|etapa| etapa.id == "etapa-2")
+                .unwrap();
+            assert_eq!(etapa.status, EtapaStatus::InProgress);
+            assert_eq!(etapa.description, None);
+            assert_eq!(etapa.completed_at, None);
+        }
+
+        let missing_project_update = update_etapa(
+            State(state.clone()),
+            Path(("missing".to_string(), "etapa-2".to_string())),
+            Json(UpdateEtapaBody {
+                title: None,
+                description: None,
+                status: None,
+                deadline: None,
+                effort_hours: None,
+                order: None,
+                depends_on: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_project_update.status(), StatusCode::NOT_FOUND);
+
+        let missing_etapa_update = update_etapa(
+            State(state.clone()),
+            Path(("projeto-1".to_string(), "missing".to_string())),
+            Json(UpdateEtapaBody {
+                title: None,
+                description: None,
+                status: None,
+                deadline: None,
+                effort_hours: None,
+                order: None,
+                depends_on: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_etapa_update.status(), StatusCode::NOT_FOUND);
+
+        let reordered = reorder_etapas(
+            State(state.clone()),
+            Path("projeto-1".to_string()),
+            Json(ReorderEtapasBody {
+                etapa_ids: vec![
+                    new_etapa_id.clone(),
+                    "etapa-1".to_string(),
+                    "etapa-2".to_string(),
+                ],
+            }),
+        )
+        .await;
+        assert_eq!(reordered.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, "projeto-1").unwrap();
+            assert_eq!(
+                stored
+                    .etapas
+                    .iter()
+                    .find(|etapa| etapa.id == new_etapa_id)
+                    .unwrap()
+                    .order,
+                0
+            );
+        }
+
+        let missing_reorder = reorder_etapas(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(ReorderEtapasBody { etapa_ids: vec![] }),
+        )
+        .await;
+        assert_eq!(missing_reorder.status(), StatusCode::NOT_FOUND);
+
+        let removed = remove_etapa(
+            State(state.clone()),
+            Path(("projeto-1".to_string(), "etapa-1".to_string())),
+        )
+        .await;
+        assert_eq!(removed.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_projeto_by_id(&db, "projeto-1").unwrap();
+            assert!(stored.etapas.iter().all(|etapa| etapa.id != "etapa-1"));
+            assert!(stored.etapas.iter().all(|etapa| etapa
+                .depends_on
+                .as_ref()
+                .map_or(true, |deps| deps.iter().all(|dep| dep != "etapa-1"))));
+        }
+
+        let missing_remove = remove_etapa(
+            State(state.clone()),
+            Path(("missing".to_string(), "etapa-1".to_string())),
+        )
+        .await;
+        assert_eq!(missing_remove.status(), StatusCode::NOT_FOUND);
+    }
+}

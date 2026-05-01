@@ -215,12 +215,12 @@ function TimeDebugPanel() {
     return () => { unlisten?.(); };
   }, [isTauri]);
 
-  const handleBuild = useCallback(async (withServer: boolean) => {
+  const handleBuild = useCallback(async () => {
     setBuildStatus('running');
     setBuildMessage('');
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('build_installer', { withServer });
+      await invoke('build_installer', { withServer: true });
     } catch (e) {
       setBuildStatus('error');
       setBuildMessage(String(e));
@@ -323,46 +323,24 @@ function TimeDebugPanel() {
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Instalador
               </span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <button
-                  onClick={() => handleBuild(true)}
-                  disabled={buildStatus === 'running'}
-                  style={{
-                    flex: 1,
-                    padding: '6px 8px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border)',
-                    background: buildStatus === 'running' ? 'var(--accent-soft)' : 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: buildStatus === 'running' ? 'not-allowed' : 'pointer',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    opacity: buildStatus === 'running' ? 0.6 : 1,
-                    transition: 'all var(--transition)',
-                  }}
-                >
-                  {buildStatus === 'running' ? 'Gerando...' : 'Com servidor'}
-                </button>
-                <button
-                  onClick={() => handleBuild(false)}
-                  disabled={buildStatus === 'running'}
-                  style={{
-                    flex: 1,
-                    padding: '6px 8px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border)',
-                    background: buildStatus === 'running' ? 'var(--accent-soft)' : 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: buildStatus === 'running' ? 'not-allowed' : 'pointer',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    opacity: buildStatus === 'running' ? 0.6 : 1,
-                    transition: 'all var(--transition)',
-                  }}
-                >
-                  {buildStatus === 'running' ? 'Gerando...' : 'Sem servidor'}
-                </button>
-              </div>
+              <button
+                onClick={handleBuild}
+                disabled={buildStatus === 'running'}
+                style={{
+                  padding: '6px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  background: buildStatus === 'running' ? 'var(--accent-soft)' : 'transparent',
+                  color: 'var(--text-secondary)',
+                  cursor: buildStatus === 'running' ? 'not-allowed' : 'pointer',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  opacity: buildStatus === 'running' ? 0.6 : 1,
+                  transition: 'all var(--transition)',
+                }}
+              >
+                {buildStatus === 'running' ? 'Gerando...' : 'Gerar installer'}
+              </button>
               {buildMessage && (
                 <span style={{
                   fontSize: 11,

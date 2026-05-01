@@ -1,6 +1,7 @@
 {
   "bundle": {
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "externalBin": ["binaries/planner-server"]
   },
   "plugins": {
     "updater": {

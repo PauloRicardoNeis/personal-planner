@@ -138,3 +138,115 @@ pub async fn archive_food(State(state): State<AppState>, Path(id): Path<String>)
     write_food(&db, &food);
     api_ok(serde_json::Value::Null)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{read_all_foods, read_food_by_id, write_food},
+        routes::test_support::{food, nutrients, response_json, test_state},
+    };
+
+    #[tokio::test]
+    async fn create_get_update_and_archive_foods() {
+        let state = test_state();
+
+        let invalid = create_food(
+            State(state.clone()),
+            Json(CreateFoodBody {
+                name: "   ".to_string(),
+                brand: None,
+                category: None,
+                serving_description: None,
+                serving_grams: None,
+                nutrients: nutrients(),
+            }),
+        )
+        .await;
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        let created = create_food(
+            State(state.clone()),
+            Json(CreateFoodBody {
+                name: "  Arroz  ".to_string(),
+                brand: Some("  ".to_string()),
+                category: Some(" Graos ".to_string()),
+                serving_description: Some("1 prato".to_string()),
+                serving_grams: Some(100.0),
+                nutrients: nutrients(),
+            }),
+        )
+        .await;
+        assert_eq!(created.status(), StatusCode::OK);
+
+        let food_id = {
+            let db = state.db.lock().unwrap();
+            let stored = read_all_foods(&db);
+            assert_eq!(stored.len(), 1);
+            assert_eq!(stored[0].name, "Arroz");
+            assert_eq!(stored[0].brand, None);
+            assert_eq!(stored[0].category.as_deref(), Some("Graos"));
+            stored[0].id.clone()
+        };
+
+        {
+            let db = state.db.lock().unwrap();
+            write_food(&db, &food("inactive-food", false));
+        }
+        let list = response_json(get_foods(State(state.clone())).await).await;
+        assert_eq!(list["data"].as_array().unwrap().len(), 1);
+
+        let updated = update_food(
+            State(state.clone()),
+            Path(food_id.clone()),
+            Json(UpdateFoodBody {
+                name: Some("Arroz integral".to_string()),
+                brand: Some(" Marca ".to_string()),
+                category: Some("".to_string()),
+                serving_description: Some("2 colheres".to_string()),
+                serving_grams: Some(50.0),
+                nutrients: Some(NutrientsPer100g {
+                    calories: 150.0,
+                    ..nutrients()
+                }),
+                active: Some(false),
+            }),
+        )
+        .await;
+        assert_eq!(updated.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_food_by_id(&db, &food_id).unwrap();
+            assert_eq!(stored.name, "Arroz integral");
+            assert_eq!(stored.brand.as_deref(), Some("Marca"));
+            assert_eq!(stored.category, None);
+            assert_eq!(stored.serving_description.as_deref(), Some("2 colheres"));
+            assert_eq!(stored.serving_grams, Some(50.0));
+            assert_eq!(stored.nutrients.calories, 150.0);
+            assert!(!stored.active);
+        }
+
+        let missing_update = update_food(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(UpdateFoodBody {
+                name: None,
+                brand: None,
+                category: None,
+                serving_description: None,
+                serving_grams: None,
+                nutrients: None,
+                active: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_update.status(), StatusCode::NOT_FOUND);
+
+        let archive = archive_food(State(state.clone()), Path(food_id.clone())).await;
+        assert_eq!(archive.status(), StatusCode::OK);
+
+        let missing_archive = archive_food(State(state.clone()), Path("missing".to_string())).await;
+        assert_eq!(missing_archive.status(), StatusCode::NOT_FOUND);
+    }
+}

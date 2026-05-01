@@ -1,3 +1,4 @@
+/* v8 ignore file -- TypeScript-only public contract; executable behavior is covered by adapter implementations. */
 import type { Habit, HabitInput } from '../models/habit.js';
 import type { Dever, DeverBase, DeverInput } from '../models/dever.js';
 import type { Projeto, ProjetoInput, ProjetoPatch, EtapaInput, EtapaPatch } from '../models/projeto.js';

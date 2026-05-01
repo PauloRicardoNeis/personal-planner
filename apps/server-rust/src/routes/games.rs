@@ -311,3 +311,219 @@ struct OwnedGame {
     img_icon_url: Option<String>,
     img_logo_url: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{read_steam_library_settings, replace_games, write_steam_library_settings},
+        routes::test_support::{response_json, test_state},
+    };
+
+    #[test]
+    fn parse_steam_profile_accepts_ids_urls_and_vanity_names() {
+        match parse_steam_profile("76561198000000000").unwrap() {
+            ParsedSteamProfile::SteamId(value) => assert_eq!(value, "76561198000000000"),
+            ParsedSteamProfile::Vanity(_) => panic!("expected steam id"),
+        }
+
+        match parse_steam_profile("https://steamcommunity.com/profiles/76561198000000001/").unwrap()
+        {
+            ParsedSteamProfile::SteamId(value) => assert_eq!(value, "76561198000000001"),
+            ParsedSteamProfile::Vanity(_) => panic!("expected steam id"),
+        }
+
+        match parse_steam_profile("https://steamcommunity.com/id/planner-user/").unwrap() {
+            ParsedSteamProfile::Vanity(value) => assert_eq!(value, "planner-user"),
+            ParsedSteamProfile::SteamId(_) => panic!("expected vanity"),
+        }
+
+        match parse_steam_profile("@planner-user").unwrap() {
+            ParsedSteamProfile::Vanity(value) => assert_eq!(value, "planner-user"),
+            ParsedSteamProfile::SteamId(_) => panic!("expected vanity"),
+        }
+
+        assert!(parse_steam_profile("  ").is_none());
+    }
+
+    #[test]
+    fn normalize_owned_games_filters_sorts_and_reports_empty_or_private_libraries() {
+        let result = normalize_owned_games(
+            OwnedGamesEnvelope {
+                response: OwnedGamesResponse {
+                    game_count: Some(5),
+                    games: Some(vec![
+                        OwnedGame {
+                            appid: 10,
+                            name: Some("B Game".to_string()),
+                            playtime_forever: Some(100),
+                            img_icon_url: Some("icon".to_string()),
+                            img_logo_url: Some("".to_string()),
+                        },
+                        OwnedGame {
+                            appid: 20,
+                            name: Some("A Game".to_string()),
+                            playtime_forever: Some(100),
+                            img_icon_url: Some(" ".to_string()),
+                            img_logo_url: Some("logo".to_string()),
+                        },
+                        OwnedGame {
+                            appid: 30,
+                            name: None,
+                            playtime_forever: Some(200),
+                            img_icon_url: None,
+                            img_logo_url: None,
+                        },
+                        OwnedGame {
+                            appid: 0,
+                            name: Some("Invalid".to_string()),
+                            playtime_forever: Some(300),
+                            img_icon_url: None,
+                            img_logo_url: None,
+                        },
+                        OwnedGame {
+                            appid: 40,
+                            name: Some("   ".to_string()),
+                            playtime_forever: None,
+                            img_icon_url: None,
+                            img_logo_url: None,
+                        },
+                    ]),
+                },
+            },
+            "2026-04-29T00:00:00.000Z",
+            "765".to_string(),
+        )
+        .unwrap();
+
+        assert_eq!(result.imported_count, 2);
+        assert_eq!(result.games[0].name, "A Game");
+        assert_eq!(result.games[1].name, "B Game");
+        assert_eq!(result.games[1].icon_hash.as_deref(), Some("icon"));
+        assert_eq!(result.games[0].logo_hash.as_deref(), Some("logo"));
+
+        let empty = normalize_owned_games(
+            OwnedGamesEnvelope {
+                response: OwnedGamesResponse {
+                    game_count: Some(0),
+                    games: None,
+                },
+            },
+            "2026-04-29T00:00:00.000Z",
+            "765".to_string(),
+        )
+        .unwrap();
+        assert!(empty.games.is_empty());
+
+        let private = normalize_owned_games(
+            OwnedGamesEnvelope {
+                response: OwnedGamesResponse {
+                    game_count: None,
+                    games: None,
+                },
+            },
+            "2026-04-29T00:00:00.000Z",
+            "765".to_string(),
+        );
+        assert!(private.is_err());
+    }
+
+    #[tokio::test]
+    async fn game_and_settings_handlers_cover_validation_and_persistence() {
+        let state = test_state();
+
+        let empty_settings = response_json(get_steam_settings(State(state.clone())).await).await;
+        assert!(empty_settings["data"].is_null());
+
+        let invalid = save_steam_settings(
+            State(state.clone()),
+            Json(SaveSteamSettingsBody {
+                api_key: " ".to_string(),
+                profile: "profile".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        {
+            let db = state.db.lock().unwrap();
+            write_steam_library_settings(
+                &db,
+                &SteamLibrarySettings {
+                    api_key: "key".to_string(),
+                    profile: "profile".to_string(),
+                    resolved_steam_id: Some("765".to_string()),
+                    last_synced_at: Some("2026-04-29T00:00:00.000Z".to_string()),
+                },
+            );
+        }
+
+        let same = save_steam_settings(
+            State(state.clone()),
+            Json(SaveSteamSettingsBody {
+                api_key: " key ".to_string(),
+                profile: " profile ".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(same.status(), StatusCode::OK);
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_steam_library_settings(&db).unwrap();
+            assert_eq!(stored.resolved_steam_id.as_deref(), Some("765"));
+            assert_eq!(
+                stored.last_synced_at.as_deref(),
+                Some("2026-04-29T00:00:00.000Z")
+            );
+        }
+
+        let changed = save_steam_settings(
+            State(state.clone()),
+            Json(SaveSteamSettingsBody {
+                api_key: "new-key".to_string(),
+                profile: "profile".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(changed.status(), StatusCode::OK);
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_steam_library_settings(&db).unwrap();
+            assert_eq!(stored.api_key, "new-key");
+            assert_eq!(stored.resolved_steam_id, None);
+            replace_games(
+                &db,
+                &[Game {
+                    id: "steam:10".to_string(),
+                    source: "steam".to_string(),
+                    steam_app_id: 10,
+                    name: "Game".to_string(),
+                    playtime_minutes: 50,
+                    icon_hash: None,
+                    logo_hash: None,
+                    last_imported_at: "2026-04-29T00:00:00.000Z".to_string(),
+                }],
+            );
+        }
+
+        let games = response_json(get_games(State(state.clone())).await).await;
+        assert_eq!(games["data"].as_array().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn sync_steam_requires_saved_settings_before_network_call() {
+        let state = test_state();
+        let response = sync_steam(State(state.clone())).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn resolve_steam_id_returns_numeric_profiles_without_network() {
+        let client = reqwest::Client::new();
+        let steam_id = resolve_steam_id(&client, "key", "76561198000000000")
+            .await
+            .unwrap();
+
+        assert_eq!(steam_id, "76561198000000000");
+    }
+}

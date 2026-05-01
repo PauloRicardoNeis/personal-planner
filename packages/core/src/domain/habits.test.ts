@@ -10,8 +10,10 @@ import type { HabitId, ISODate, ISODateTime } from '../models/shared.js';
 import {
   computeHabitDayProgress,
   computeHabitGoalCompletions,
+  computeHabitTargetScore,
   computeHabitProgress,
   decrementHabitCompletion,
+  getHabitCompletionCount,
   incrementHabitCompletion,
   scoreHabitOccurrences,
 } from './habits.js';
@@ -275,5 +277,30 @@ describe('habit completion counters', () => {
 describe('scoreHabitOccurrences', () => {
   it('repeats the final weight for occurrences beyond the configured weights', () => {
     expect(scoreHabitOccurrences(4, [5, 2, 1])).toBe(9);
+  });
+
+  it('returns zero for non-positive occurrence counts', () => {
+    expect(scoreHabitOccurrences(0, [5])).toBe(0);
+    expect(scoreHabitOccurrences(-2, [5])).toBe(0);
+  });
+});
+
+describe('habit target helpers', () => {
+  it('gets a completion count with a zero default', () => {
+    const habit = makeHabit({ completions: { [d('2026-04-28')]: 2 } });
+
+    expect(getHabitCompletionCount(habit, d('2026-04-28'))).toBe(2);
+    expect(getHabitCompletionCount(habit, d('2026-04-29'))).toBe(0);
+  });
+
+  it('computes target score from normalized settings', () => {
+    expect(computeHabitTargetScore(makeHabit({
+      timesPerDay: 3,
+      valueWeights: [5, 2, 1],
+    }))).toBe(8);
+    expect(computeHabitTargetScore(makeHabit({
+      timesPerDay: Number.NaN,
+      valueWeights: [],
+    }))).toBe(1);
   });
 });

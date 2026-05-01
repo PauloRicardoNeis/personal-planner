@@ -102,6 +102,13 @@ describe('computeProjetoEffort', () => {
     ]);
     expect(computeProjetoEffort(p)).toEqual({ completedHours: 3, totalHours: 3, percent: 100 });
   });
+
+  it('returns zero percent when effort hours sum to zero', () => {
+    const p = makeProjeto([
+      makeEtapa({ id: eid('1'), status: 'done', effortHours: 0 }),
+    ]);
+    expect(computeProjetoEffort(p)).toEqual({ completedHours: 0, totalHours: 0, percent: 0 });
+  });
 });
 
 // ── getBlockedEtapas ─────────────────────────────────────────────────────────
@@ -278,6 +285,16 @@ describe('wouldCreateCycle', () => {
       makeEtapa({ id: eid('3') }),
     ]);
     expect(wouldCreateCycle(p, eid('3'), [eid('2')])).toBe(false);
+  });
+
+  it('skips already visited dependency nodes without reporting a cycle', () => {
+    const p = makeProjeto([
+      makeEtapa({ id: eid('1') }),
+      makeEtapa({ id: eid('2'), dependsOn: [eid('1')] }),
+      makeEtapa({ id: eid('3'), dependsOn: [eid('1')] }),
+      makeEtapa({ id: eid('4') }),
+    ]);
+    expect(wouldCreateCycle(p, eid('4'), [eid('2'), eid('3')])).toBe(false);
   });
 
   it('self-dependency is a cycle', () => {

@@ -3,12 +3,9 @@
   "private": true,
   "version": "0.1.13",
   "scripts": {
-    "build:with-server": "tauri build --config src-tauri/tauri.conf.with-server.json",
-    "build:no-server":   "tauri build --config src-tauri/tauri.conf.no-server.json",
-    "build:release-with-server": "tauri build --config src-tauri/tauri.conf.release.with-server.json",
-    "build:release-no-server":   "tauri build --config src-tauri/tauri.conf.release.json",
-    "dev:with-server":   "tauri dev --config src-tauri/tauri.conf.with-server.json",
-    "dev:no-server":     "tauri dev"
+    "build": "tauri build",
+    "build:release": "tauri build --config src-tauri/tauri.conf.release.json",
+    "dev": "tauri dev"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

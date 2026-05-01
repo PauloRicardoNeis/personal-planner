@@ -281,7 +281,13 @@ interface TodaySnapshot {
 | Parse inválido do localStorage | Fallback para `[]` + `console.error`, sem crash |
 | `updateDever` não muda `type` ou `recurrence` | Para mudar, arquivar e recriar |
 
-## Armazenamento localStorage
+## Armazenamento SQLite (produto desktop)
+
+SQLite via `apps/server-rust` e o armazenamento canonico do produto final. O desktop Tauri sempre embute o sidecar `planner-server` e acessa esses dados por `RestApiAdapter`.
+
+## Armazenamento localStorage (dev/teste)
+
+`localStorage` nao e armazenamento de produto. Ele existe apenas para desenvolvimento rapido e testes de frontend no browser via `LocalStorageAdapter`.
 
 | Chave | Tipo | Conteúdo |
 |---|---|---|
@@ -295,7 +301,7 @@ interface TodaySnapshot {
 
 Toda leitura é validada com os schemas Zod correspondentes.
 
-## Armazenamento SQLite (backend Rust)
+## Tabelas SQLite (backend Rust)
 
 | Tabela | Schema | Conteúdo |
 |---|---|---|

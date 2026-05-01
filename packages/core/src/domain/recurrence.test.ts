@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isOccurrenceOn } from './recurrence.js';
+import { getMonthlyWindowInfo, isOccurrenceOn } from './recurrence.js';
 import type { ISODate } from '../models/shared.js';
 
 const d = (s: string) => s as ISODate;
@@ -65,5 +65,81 @@ describe('isOccurrenceOn — monthly', () => {
 
   it('fires on day 31 in a 31-day month', () => {
     expect(isOccurrenceOn({ type: 'monthly', monthDay: 31 }, d('2026-03-31'))).toBe(true);
+  });
+
+  it('fires throughout a configured monthly window', () => {
+    const config = { type: 'monthly' as const, monthDay: 10, monthDayEnd: 12 };
+
+    expect(isOccurrenceOn(config, d('2026-03-09'))).toBe(false);
+    expect(isOccurrenceOn(config, d('2026-03-10'))).toBe(true);
+    expect(isOccurrenceOn(config, d('2026-03-11'))).toBe(true);
+    expect(isOccurrenceOn(config, d('2026-03-12'))).toBe(true);
+    expect(isOccurrenceOn(config, d('2026-03-13'))).toBe(false);
+  });
+
+  it('clamps a monthly window end to the number of days in the month', () => {
+    const config = { type: 'monthly' as const, monthDay: 28, monthDayEnd: 31 };
+
+    expect(isOccurrenceOn(config, d('2026-02-28'))).toBe(true);
+    expect(isOccurrenceOn(config, d('2026-03-31'))).toBe(true);
+  });
+});
+
+describe('getMonthlyWindowInfo', () => {
+  it('returns null for non-monthly and non-windowed configs', () => {
+    expect(getMonthlyWindowInfo({ type: 'daily' }, d('2026-03-10'))).toBeNull();
+    expect(getMonthlyWindowInfo({ type: 'weekly', weekdays: ['monday'] }, d('2026-03-10'))).toBeNull();
+    expect(getMonthlyWindowInfo({ type: 'monthly', monthDay: 10 }, d('2026-03-10'))).toBeNull();
+  });
+
+  it('returns active status inside the current monthly window', () => {
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 10, monthDayEnd: 12 },
+      d('2026-03-11'),
+    )).toEqual({
+      status: 'active',
+      occurrenceDate: d('2026-03-10'),
+    });
+  });
+
+  it('returns overdue status after the current monthly window', () => {
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 10, monthDayEnd: 12 },
+      d('2026-03-20'),
+    )).toEqual({
+      status: 'overdue',
+      occurrenceDate: d('2026-03-10'),
+    });
+  });
+
+  it('returns the previous month occurrence before this month window starts', () => {
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 10, monthDayEnd: 12 },
+      d('2026-03-05'),
+    )).toEqual({
+      status: 'overdue',
+      occurrenceDate: d('2026-02-10'),
+    });
+  });
+
+  it('returns null when current or previous month cannot contain the start day', () => {
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 31, monthDayEnd: 31 },
+      d('2026-04-15'),
+    )).toBeNull();
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 31, monthDayEnd: 31 },
+      d('2026-03-05'),
+    )).toBeNull();
+  });
+
+  it('uses local date parts across year boundaries', () => {
+    expect(getMonthlyWindowInfo(
+      { type: 'monthly', monthDay: 31, monthDayEnd: 31 },
+      d('2027-01-05'),
+    )).toEqual({
+      status: 'overdue',
+      occurrenceDate: d('2026-12-31'),
+    });
   });
 });

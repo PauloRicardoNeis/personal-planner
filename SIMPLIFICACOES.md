@@ -86,10 +86,7 @@ Use este arquivo para marcarmos quais arquivos ja revisamos em busca de simplifi
 - [ ] apps/desktop/src-tauri/icons/StoreLogo.png
 - [ ] apps/desktop/src-tauri/src/main.rs
 - [ ] apps/desktop/src-tauri/tauri.conf.json
-- [ ] apps/desktop/src-tauri/tauri.conf.no-server.json
 - [ ] apps/desktop/src-tauri/tauri.conf.release.json
-- [ ] apps/desktop/src-tauri/tauri.conf.release.with-server.json
-- [ ] apps/desktop/src-tauri/tauri.conf.with-server.json
 - [ ] apps/server-rust/.gitignore
 - [ ] apps/server-rust/Cargo.lock
 - [ ] apps/server-rust/Cargo.toml
@@ -220,7 +217,7 @@ Use este arquivo para marcarmos quais arquivos ja revisamos em busca de simplifi
 - [ ] scripts/foods-example.json
 - [ ] scripts/import-foods.ts
 - [ ] specs/compras-tab.md
-- [ ] specs/desktop-installer-build-variants.md
+- [ ] specs/desktop-installer-server-storage.md
 - [ ] specs/deveres/dever-cycle-resolution.spec.md
 - [ ] specs/deveres/dever-edit.spec.md
 - [ ] specs/deveres/dever-once-start-scheduling.spec.md

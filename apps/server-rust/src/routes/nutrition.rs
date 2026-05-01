@@ -169,3 +169,139 @@ fn compute_percentages(totals: &DailyTargets, targets: &DailyTargets) -> DailyTa
         cholesterol: pct_opt(totals.cholesterol, targets.cholesterol),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{write_diary_entry, write_food},
+        models::{DiaryEntry, Food},
+        routes::test_support::{food, nutrients, response_json, test_state},
+    };
+
+    fn food_entry(id: &str, food_id: &str) -> DiaryEntry {
+        DiaryEntry::Food {
+            id: id.to_string(),
+            date: "2026-04-29".to_string(),
+            food_id: food_id.to_string(),
+            grams: 120.0,
+            meal: Some("lunch".to_string()),
+            created_at: "2026-04-29T12:00:00.000Z".to_string(),
+        }
+    }
+
+    fn quick_entry(id: &str) -> DiaryEntry {
+        DiaryEntry::Quick {
+            id: id.to_string(),
+            date: "2026-04-29".to_string(),
+            description: "Cafe".to_string(),
+            grams: 80.0,
+            nutrients: nutrients(),
+            meal: None,
+            created_at: "2026-04-29T08:00:00.000Z".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn profile_and_summary_handlers_cover_defaults_profile_and_bad_dates() {
+        let state = test_state();
+
+        let empty_profile = response_json(get_profile(State(state.clone())).await).await;
+        assert!(empty_profile["data"].is_null());
+
+        let invalid = get_summary(
+            State(state.clone()),
+            Query(SummaryQuery {
+                date: "29-04-2026".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        {
+            let db = state.db.lock().unwrap();
+            let active_food: Food = food("food-1", true);
+            write_food(&db, &active_food);
+            write_diary_entry(&db, &food_entry("entry-food", "food-1"));
+            write_diary_entry(&db, &food_entry("entry-missing-food", "missing-food"));
+            write_diary_entry(&db, &quick_entry("entry-quick"));
+        }
+
+        let summary = response_json(
+            get_summary(
+                State(state.clone()),
+                Query(SummaryQuery {
+                    date: "2026-04-29".to_string(),
+                }),
+            )
+            .await,
+        )
+        .await;
+        assert_eq!(summary["data"]["entries"].as_array().unwrap().len(), 3);
+        assert_eq!(
+            summary["data"]["totals"]["calories"],
+            serde_json::json!(200.0)
+        );
+        assert_eq!(
+            summary["data"]["percentages"]["calories"],
+            serde_json::json!(10.0)
+        );
+
+        let profile = NutritionProfile {
+            weight_kg: 80.0,
+            goal_type: "maintain".to_string(),
+            custom_targets: Some(serde_json::json!({
+                "calories": 0.0,
+                "protein": 100.0
+            })),
+        };
+        let saved = save_profile(State(state.clone()), Json(profile)).await;
+        assert_eq!(saved.status(), StatusCode::OK);
+
+        let stored_profile = response_json(get_profile(State(state.clone())).await).await;
+        assert_eq!(stored_profile["data"]["weightKg"], serde_json::json!(80.0));
+
+        let summary_with_profile = response_json(
+            get_summary(
+                State(state.clone()),
+                Query(SummaryQuery {
+                    date: "2026-04-29".to_string(),
+                }),
+            )
+            .await,
+        )
+        .await;
+        assert_eq!(
+            summary_with_profile["data"]["percentages"]["calories"],
+            serde_json::json!(0.0)
+        );
+        assert_eq!(
+            summary_with_profile["data"]["targets"]["protein"],
+            serde_json::json!(100.0)
+        );
+    }
+
+    #[test]
+    fn percentage_helpers_handle_zero_and_optional_targets() {
+        let defaults = default_daily_targets();
+        assert_eq!(defaults.calories, 2000.0);
+        assert_eq!(pct(50.0, 200.0), 25.0);
+        assert_eq!(pct(50.0, 0.0), 0.0);
+        assert_eq!(pct_opt(Some(5.0), Some(10.0)), Some(50.0));
+        assert_eq!(pct_opt(None, Some(10.0)), Some(0.0));
+        assert_eq!(pct_opt(Some(5.0), None), Some(0.0));
+
+        let mut totals = zero_targets();
+        totals.calories = 100.0;
+        totals.saturated_fat = Some(2.0);
+
+        let mut targets = zero_targets();
+        targets.calories = 200.0;
+        targets.saturated_fat = Some(4.0);
+
+        let percentages = compute_percentages(&totals, &targets);
+        assert_eq!(percentages.calories, 50.0);
+        assert_eq!(percentages.saturated_fat, Some(50.0));
+        assert_eq!(percentages.sugar, Some(0.0));
+    }
+}

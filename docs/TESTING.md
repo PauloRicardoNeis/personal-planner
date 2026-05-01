@@ -159,6 +159,19 @@ Regra:
 - `*.contract.test.ts` para contrato
 - `*.e2e.ts` para Playwright
 
+## Comandos de qualidade
+
+- `pnpm test` roda a suite Vitest atual.
+- `pnpm test:coverage` roda coverage do `packages/core`.
+- `pnpm test:rust` roda `cargo test` do servidor Rust.
+- `pnpm test:coverage:rust` mostra o resumo de coverage Rust no terminal.
+- `pnpm test:coverage:rust:html` gera o relatorio HTML em `apps/server-rust/target/llvm-cov/html/index.html`.
+- `pnpm test:coverage:rust:open` gera e abre o relatorio HTML de coverage Rust.
+- `pnpm test:mutation:core:dry` valida a configuracao do Stryker sem executar mutacoes.
+- `pnpm test:mutation:core` roda mutation testing TS/Vitest do `packages/core`.
+- `pnpm test:mutation:rust` roda mutation testing Rust com `cargo-mutants`.
+- `pnpm test:mutation:rust:list` lista os mutantes Rust sem executar a rodada completa.
+
 ## Regras obrigatorias
 
 - Todo arquivo de producao novo ou alterado deve sair com testes no mesmo change.

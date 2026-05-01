@@ -6,17 +6,28 @@
     "dev:web": "pnpm --filter web dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:coverage": "pnpm --filter @planner/core test:coverage",
+    "test:rust": "cargo test --manifest-path apps/server-rust/Cargo.toml",
+    "test:coverage:rust": "cargo llvm-cov --manifest-path apps/server-rust/Cargo.toml",
+    "test:coverage:rust:html": "cargo llvm-cov --manifest-path apps/server-rust/Cargo.toml --html --output-dir apps/server-rust/target/llvm-cov",
+    "test:coverage:rust:open": "cargo llvm-cov --manifest-path apps/server-rust/Cargo.toml --open --output-dir apps/server-rust/target/llvm-cov",
+    "test:mutation:core": "stryker run stryker.config.mjs",
+    "test:mutation:core:dry": "stryker run stryker.config.mjs --dryRunOnly",
+    "test:mutation:rust": "cargo mutants --manifest-path apps/server-rust/Cargo.toml",
+    "test:mutation:rust:list": "cargo mutants --manifest-path apps/server-rust/Cargo.toml --list",
     "build:web": "pnpm --filter web build",
     "dev:server": "cargo run --manifest-path apps/server-rust/Cargo.toml",
     "build:server-bin": "cargo build --release --manifest-path apps/server-rust/Cargo.toml",
     "copy:server-bin": "node -e \"require('fs').copyFileSync('apps/server-rust/target/release/planner-server.exe','apps/desktop/src-tauri/binaries/planner-server-x86_64-pc-windows-msvc.exe')\"",
-    "build:desktop-with-server": "pnpm build:server-bin && pnpm copy:server-bin && pnpm --filter web build:desktop && pnpm --filter desktop build:with-server",
-    "build:desktop-no-server": "pnpm --filter web build:desktop && pnpm --filter desktop build:no-server",
-    "build:desktop-release-with-server": "pnpm build:server-bin && pnpm copy:server-bin && pnpm --filter web build:desktop && pnpm --filter desktop build:release-with-server",
-    "build:desktop-release-no-server": "pnpm --filter web build:desktop && pnpm --filter desktop build:release-no-server"
+    "build:desktop": "pnpm build:server-bin && pnpm copy:server-bin && pnpm --filter web build:desktop && pnpm --filter desktop build",
+    "build:desktop-release": "pnpm build:server-bin && pnpm copy:server-bin && pnpm --filter web build:desktop && pnpm --filter desktop build:release"
   },
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1"
   }
 }

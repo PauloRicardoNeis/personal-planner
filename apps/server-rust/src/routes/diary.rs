@@ -189,3 +189,114 @@ pub async fn delete_diary_entry_handler(
     delete_diary_entry(&db, &id);
     api_ok(serde_json::Value::Null)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{read_diary_entries_by_date, read_diary_entry_by_id},
+        routes::test_support::{nutrients, response_json, test_state},
+    };
+
+    #[tokio::test]
+    async fn diary_handlers_create_filter_update_and_delete_entries() {
+        let state = test_state();
+
+        let invalid = get_diary(
+            State(state.clone()),
+            Query(DiaryQuery {
+                date: "29-04-2026".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        let created_food = create_diary_entry(
+            State(state.clone()),
+            Json(CreateDiaryEntryBody::Food {
+                date: "2026-04-29".to_string(),
+                food_id: "food-1".to_string(),
+                grams: 120.0,
+                meal: Some("lunch".to_string()),
+            }),
+        )
+        .await;
+        assert_eq!(created_food.status(), StatusCode::OK);
+
+        let created_quick = create_diary_entry(
+            State(state.clone()),
+            Json(CreateDiaryEntryBody::Quick {
+                date: "2026-04-29".to_string(),
+                description: "Cafe".to_string(),
+                grams: 80.0,
+                nutrients: nutrients(),
+                meal: None,
+            }),
+        )
+        .await;
+        assert_eq!(created_quick.status(), StatusCode::OK);
+
+        let list = response_json(
+            get_diary(
+                State(state.clone()),
+                Query(DiaryQuery {
+                    date: "2026-04-29".to_string(),
+                }),
+            )
+            .await,
+        )
+        .await;
+        assert_eq!(list["data"].as_array().unwrap().len(), 2);
+
+        let ids: Vec<String> = {
+            let db = state.db.lock().unwrap();
+            read_diary_entries_by_date(&db, "2026-04-29")
+                .into_iter()
+                .map(|entry| entry.id().to_string())
+                .collect()
+        };
+
+        for id in &ids {
+            let update = update_diary_entry(
+                State(state.clone()),
+                Path(id.clone()),
+                Json(UpdateDiaryEntryBody {
+                    grams: Some(200.0),
+                    meal: Some("dinner".to_string()),
+                }),
+            )
+            .await;
+            assert_eq!(update.status(), StatusCode::OK);
+
+            let db = state.db.lock().unwrap();
+            match read_diary_entry_by_id(&db, id).unwrap() {
+                DiaryEntry::Food { grams, meal, .. } | DiaryEntry::Quick { grams, meal, .. } => {
+                    assert_eq!(grams, 200.0);
+                    assert_eq!(meal.as_deref(), Some("dinner"));
+                }
+            }
+        }
+
+        let missing_update = update_diary_entry(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(UpdateDiaryEntryBody {
+                grams: None,
+                meal: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_update.status(), StatusCode::NOT_FOUND);
+
+        let deleted = delete_diary_entry_handler(State(state.clone()), Path(ids[0].clone())).await;
+        assert_eq!(deleted.status(), StatusCode::OK);
+        {
+            let db = state.db.lock().unwrap();
+            assert!(read_diary_entry_by_id(&db, &ids[0]).is_none());
+        }
+
+        let missing_delete =
+            delete_diary_entry_handler(State(state.clone()), Path("missing".to_string())).await;
+        assert_eq!(missing_delete.status(), StatusCode::NOT_FOUND);
+    }
+}

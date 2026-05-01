@@ -4,13 +4,19 @@ Leia este arquivo antes de fazer qualquer mudanca no projeto.
 
 ## O que e esse projeto
 
-`planner-app` e um app web de planejamento pessoal single-user. Ele rastreia:
+`planner-app` e um app desktop de planejamento pessoal single-user. A UI e React/Vite, mas a versao correta do produto e o desktop empacotado com sidecar `planner-server` e SQLite. Ele rastreia:
 
 - **Habitos** - comportamentos diarios repetidos infinitamente (ex: Anki, exercicio)
 - **Deveres** - tarefas a fazer, podendo ser unicas (`once`) ou ciclicas (`cyclic`)
 - **Hoje** - view unificada com habitos do dia + deveres devidos/atrasados
 
-No MVP, o app roda 100% no browser com `localStorage`. O contrato de dados foi projetado para trocar o adapter local por um servidor remoto sem reescrever a UI.
+O app final nao roda sobre `localStorage`: o desktop usa `RestApiAdapter` falando com o sidecar Rust (`planner-server`) e persiste em SQLite. `localStorage` existe apenas como harness de desenvolvimento/teste do frontend no navegador.
+
+## Fonte de verdade do produto
+
+- **App final/canonico:** desktop Tauri + sidecar `planner-server` + SQLite.
+- **Browser/Vite com `localStorage`:** somente para desenvolvimento rapido, testes de UI e isolamento de frontend.
+- **Nao entregue comportamento como pronto se ele so foi validado no `LocalStorageAdapter`.** Para feature ou bugfix de produto, valide tambem o caminho desktop/server (`RestApiAdapter` + Rust).
 
 ## Mapa de diretorios
 
@@ -21,7 +27,7 @@ No MVP, o app roda 100% no browser com `localStorage`. O contrato de dados foi p
 | `packages/core/src/models/` | Interfaces `Habit`, `OnceDever`, `CyclicDever` e schemas Zod |
 | `packages/core/src/domain/recurrence.ts` | `isOccurrenceOn()` - logica pura de agendamento, com testes |
 | `apps/web/src/adapter.ts` | **UNICO ponto** onde o adapter concreto e instanciado |
-| `apps/web/src/adapters/` | `LocalStorageAdapter` (MVP) e `RestApiAdapter` (stub Phase 2) |
+| `apps/web/src/adapters/` | `LocalStorageAdapter` (harness dev/teste) e `RestApiAdapter` (produto desktop) |
 | `apps/web/src/hooks/` | Hooks React que consomem o adapter |
 | `apps/web/src/pages/` | `HojePage`, `HabitsPage`, `DeveresPage` |
 | `apps/web/src/test/` | Setup, fakes, builders e testes de integracao React do frontend |
@@ -56,6 +62,7 @@ Verifique `specs/` para um spec file existente. Se nao existir, crie um usando o
 - `packages/core` contem apenas modelos, schemas, contratos e funcoes puras
 - `apps/web` importa de `packages/core` mas nunca de `apps/server`
 - A UI depende apenas de `DataAdapter` - nunca de classes concretas de adapter
+- O desktop deve usar `VITE_BACKEND_MODE=rest`; `VITE_BACKEND_MODE=local` e permitido apenas para dev/teste no browser
 - Todos os valores de data em modelos sao strings `YYYY-MM-DD` (`ISODate`) ou ISO completo (`ISODateTime`)
 - IDs sao `crypto.randomUUID()` - branded types evitam mistura de IDs de entidades distintas
 - Todos os metodos do adapter retornam `Promise<Result<T>>` - nunca lancam excecao alem da fronteira do adapter
@@ -83,6 +90,12 @@ pnpm install
 
 # Frontend dev server (porta 5173)
 pnpm --filter web dev
+
+# Servidor Rust usado pelo desktop
+pnpm dev:server
+
+# Installer desktop canonico (produto final)
+pnpm build:desktop
 
 # Typecheck em todos os pacotes
 pnpm -r typecheck
@@ -114,7 +127,8 @@ Mudancas triviais (copy, ajustes de estilo, renomeacoes simples): spec opcional.
 ## Entrega de installer
 
 - Ao concluir qualquer feature ou bugfix, gere o installer desktop correspondente e avise o usuario que o artefato foi atualizado.
-- Use `pnpm build:desktop-no-server` como padrao, a menos que a mudanca exija explicitamente a variante com servidor.
+- Use `pnpm build:desktop` como padrao. O desktop sempre embute o sidecar `planner-server` e usa SQLite; nao entregue variante baseada em `localStorage` sem uma migracao explicita.
+- Testes em `localStorage` nao substituem validacao do server para comportamento de produto.
 
 ## O que esta no MVP
 

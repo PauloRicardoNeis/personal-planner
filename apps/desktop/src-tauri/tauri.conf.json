@@ -22,7 +22,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "externalBin": []
+    "externalBin": ["binaries/planner-server"]
   },
   "plugins": {
     "updater": {

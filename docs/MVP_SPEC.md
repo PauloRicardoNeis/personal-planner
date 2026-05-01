@@ -1,106 +1,119 @@
 # MVP Spec
 
-Acceptance criteria do MVP. Cada item é verificável manualmente ou via teste.
+Acceptance criteria do MVP. Cada item e verificavel manualmente ou via teste.
+
+## Alvo De Produto
+
+O MVP de produto e o desktop Tauri com sidecar `planner-server` e SQLite. O frontend web em Vite e o `LocalStorageAdapter` sao auxiliares de desenvolvimento/teste e nao definem a versao final do app.
 
 ---
 
-## Feature: Hábitos
+## Feature: Habitos
 
-### Criar hábito
-- Usuário fornece título (obrigatório) e categoria (opcional)
-- Hábito criado aparece imediatamente na lista de hábitos ativos
-- Hábito criado com `active: true` e `completions: {}`
+### Criar Habito
 
-### Listar hábitos
-- Apenas hábitos com `active: true` aparecem na lista
-- Lista exibe título e categoria (se houver)
+- Usuario fornece titulo obrigatorio e categoria opcional.
+- Habito criado aparece imediatamente na lista de habitos ativos.
+- Habito criado com `active: true`, `completions: {}`, `timesPerDay` normalizado e `valueWeights` normalizado.
 
-### Check-off diário
-- Usuário pode marcar um hábito como feito para o dia atual
-- Marcação persiste após reload da página
-- Usuário pode desmarcar um hábito marcado para o dia atual
+### Listar Habitos
 
-### Arquivar hábito
-- Usuário pode arquivar um hábito (`active: false`)
-- Hábito arquivado não aparece na lista de hábitos ativos
-- Hábito arquivado não aparece na view Hoje
+- Apenas habitos com `active: true` aparecem na lista.
+- Lista exibe titulo, categoria se houver, contagem do dia, meta e pontos.
+
+### Check-off Diario
+
+- Usuario pode registrar uma ou mais ocorrencias de um habito para o dia atual.
+- Marcacao persiste apos reiniciar o desktop.
+- Usuario pode remover uma ocorrencia do dia atual.
+
+### Arquivar Habito
+
+- Usuario pode arquivar um habito (`active: false`).
+- Habito arquivado nao aparece na lista de habitos ativos.
+- Habito arquivado nao aparece na view Hoje.
 
 ---
 
 ## Feature: Deveres
 
-### Criar dever `once`
-- Usuário fornece: título (obrigatório), deadline (obrigatório), área (opcional), prioridade
-- Dever criado aparece na lista de deveres ativos
+### Criar Dever `once`
 
-### Criar dever `cyclic`
-- Usuário fornece: título (obrigatório), tipo de recorrência (daily/weekly/monthly), área (opcional), prioridade
-- Para `weekly`: usuário seleciona ao menos um dia da semana
-- Para `monthly`: usuário informa o dia do mês (1–31)
-- Dever criado aparece na lista de deveres ativos
+- Usuario fornece titulo obrigatorio, janela de inicio/fim quando aplicavel, area opcional e prioridade.
+- Dever criado aparece na lista de deveres ativos.
 
-### Listar deveres
-- Apenas deveres com `active: true` aparecem na lista
-- Lista exibe título, tipo, prioridade e área (se houver)
+### Criar Dever `cyclic`
 
-### Marcar ocorrência como feita
-- Usuário pode marcar uma ocorrência específica de um dever como feita
-- A completion é armazenada com `occurrenceDate` e `completedAt`
-- Marcar como feito persiste após reload
-- Usuário pode desmarcar uma ocorrência
+- Usuario fornece titulo obrigatorio, tipo de recorrencia (`daily`, `weekly` ou `monthly`), area opcional e prioridade.
+- Para `weekly`, usuario seleciona ao menos um dia da semana.
+- Para `monthly`, usuario informa o dia do mes.
+- Dever criado aparece na lista de deveres ativos.
 
-### Dever `once` concluído
-- Dever `once` com todas as ocorrências concluídas não aparece mais na view Hoje
-- Dever `once` concluído continua na lista de deveres (apenas `active: false` o remove)
+### Listar Deveres
 
-### Arquivar dever
-- Usuário pode arquivar um dever (`active: false`)
-- Dever arquivado não aparece na lista ativa nem na view Hoje
+- Apenas deveres com `active: true` aparecem na lista.
+- Lista exibe titulo, tipo, prioridade e area se houver.
+
+### Marcar Ocorrencia Como Feita
+
+- Usuario pode marcar uma ocorrencia especifica de um dever como feita.
+- A completion e armazenada com `occurrenceDate` e `completedAt`.
+- Marcacao persiste apos reiniciar o desktop.
+- Usuario pode desmarcar uma ocorrencia.
+
+### Arquivar Dever
+
+- Usuario pode arquivar um dever (`active: false`).
+- Dever arquivado nao aparece na lista ativa nem na view Hoje.
 
 ---
 
 ## Feature: Hoje
 
-### Montagem da view
-- Exibe todos os hábitos ativos com o status do dia atual
-- Exibe todos os deveres devidos hoje (via recorrência calculada) e overdue
+### Montagem Da View
 
-### Hábitos na view Hoje
-- Cada hábito exibe o título e se está feito hoje
-- Usuário pode fazer check-off diretamente na view Hoje
+- Exibe todos os habitos ativos com o status do dia atual.
+- Exibe todos os deveres devidos hoje e overdue.
 
-### Deveres na view Hoje
+### Habitos Na View Hoje
 
-**Dever `once` today:** `deadline === hoje` → aparece com `isOverdue: false`
-**Dever `once` overdue:** `deadline < hoje` e não concluído → aparece com `isOverdue: true`
-**Dever `cyclic` daily:** aparece todo dia
-**Dever `cyclic` weekly:** aparece apenas nos dias da semana configurados
-**Dever `cyclic` monthly:** aparece no dia do mês configurado; se o mês não tem esse dia, não aparece
+- Cada habito exibe titulo e progresso do dia.
+- Usuario pode registrar ocorrencias diretamente na view Hoje.
 
-### Ordenação
-- Deveres overdue aparecem antes dos devidos hoje
-- Dentro de cada grupo: `high` → `medium` → `low`
+### Deveres Na View Hoje
 
-### Estados de UI obrigatórios
-- **Loading:** exibido enquanto o adapter busca os dados
-- **Vazio:** mensagem quando não há nada para o dia
-- **Erro:** mensagem quando o adapter retorna `{ ok: false }`
+- Dever `once` devido hoje aparece com `isOverdue: false`.
+- Dever `once` overdue aparece com `isOverdue: true` ate ser concluido ou arquivado.
+- Dever `cyclic daily` aparece todo dia dentro da janela ativa.
+- Dever `cyclic weekly` aparece apenas nos dias da semana configurados.
+- Dever `cyclic monthly` aparece no dia ou janela do mes configurado.
+
+### Ordenacao
+
+- Deveres overdue aparecem antes dos devidos hoje.
+- Dentro de cada grupo: `high` -> `medium` -> `low`.
+
+### Estados De UI Obrigatorios
+
+- Loading exibido enquanto o adapter busca os dados.
+- Estado vazio quando nao ha nada para o dia.
+- Erro quando o adapter retorna `{ ok: false }`.
 
 ---
 
 ## Armazenamento
 
-- Todo estado persiste em `localStorage` nas chaves `planner_habits` e `planner_deveres`
-- Após reload, o estado completo é restaurado
-- Dados inválidos no localStorage resultam em fallback para array vazio, sem crash
+- No produto final, todo estado persistente passa pelo desktop Tauri, `RestApiAdapter`, sidecar Rust `planner-server` e SQLite.
+- Apos reiniciar o desktop, o estado completo e restaurado do SQLite.
+- `localStorage` e `LocalStorageAdapter` existem apenas para desenvolvimento/teste de frontend no browser.
+- Dados invalidos em adapters auxiliares devem resultar em fallback seguro, sem crash.
 
 ---
 
-## Fora do escopo do MVP
+## Fora Do Escopo Do MVP
 
-- Editar tipo ou recorrência de um dever (arquivar + recriar)
-- Progresso em deveres (%, etapas)
-- Streaks de hábitos
-- Filtros e ordenação customizada
-- Busca
-- Servidor remoto
+- Editar tipo ou recorrencia de um dever sem arquivar + recriar.
+- Progresso em deveres por percentual/etapas.
+- Filtros e ordenacao customizada.
+- Busca.
+- Servidor remoto multiusuario.

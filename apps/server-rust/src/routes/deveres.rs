@@ -421,3 +421,200 @@ pub async fn archive_dever(State(state): State<AppState>, Path(id): Path<String>
     write_dever(&db, &updated);
     api_ok(serde_json::Value::Null)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{read_all_deveres, read_dever_by_id, write_dever},
+        routes::test_support::{cyclic_dever, once_dever, test_state},
+    };
+
+    #[tokio::test]
+    async fn create_get_and_update_once_and_cyclic_deveres() {
+        let state = test_state();
+
+        let once_response = create_dever(
+            State(state.clone()),
+            Json(CreateDeverBody::Once {
+                title: "  Pagar boleto  ".to_string(),
+                fim: Some("2026-04-30".to_string()),
+                inicio: None,
+                area: Some("  ".to_string()),
+                priority: Priority::Low,
+            }),
+        )
+        .await;
+        assert_eq!(once_response.status(), StatusCode::OK);
+
+        let cyclic_response = create_dever(
+            State(state.clone()),
+            Json(CreateDeverBody::Cyclic {
+                title: "  Treinar  ".to_string(),
+                recurrence: RecurrenceConfig::Daily,
+                inicio: Some("2026-04-01T00:00:00.000Z".to_string()),
+                fim: None,
+                area: Some(" Saude ".to_string()),
+                priority: Priority::High,
+            }),
+        )
+        .await;
+        assert_eq!(cyclic_response.status(), StatusCode::OK);
+        assert_eq!(
+            get_deveres(State(state.clone())).await.status(),
+            StatusCode::OK
+        );
+
+        let ids: Vec<String> = {
+            let db = state.db.lock().unwrap();
+            read_all_deveres(&db)
+                .into_iter()
+                .map(|dever| {
+                    match &dever {
+                        Dever::Once {
+                            title,
+                            area,
+                            inicio,
+                            ..
+                        } => {
+                            assert_eq!(title, "Pagar boleto");
+                            assert_eq!(area, &None);
+                            assert!(inicio.is_some());
+                        }
+                        Dever::Cyclic { title, area, .. } => {
+                            assert_eq!(title, "Treinar");
+                            assert_eq!(area.as_deref(), Some("Saude"));
+                        }
+                    }
+                    dever.id().to_string()
+                })
+                .collect()
+        };
+
+        let once_id = ids[0].clone();
+        let cyclic_id = ids[1].clone();
+        let once_update = update_dever(
+            State(state.clone()),
+            Path(once_id.clone()),
+            Json(UpdateDeverBody {
+                title: Some("Boleto editado".to_string()),
+                area: Some("".to_string()),
+                priority: Some(Priority::Medium),
+                active: Some(false),
+            }),
+        )
+        .await;
+        assert_eq!(once_update.status(), StatusCode::OK);
+
+        let cyclic_update = update_dever(
+            State(state.clone()),
+            Path(cyclic_id.clone()),
+            Json(UpdateDeverBody {
+                title: Some("Treino editado".to_string()),
+                area: Some(" Corpo ".to_string()),
+                priority: Some(Priority::Low),
+                active: Some(true),
+            }),
+        )
+        .await;
+        assert_eq!(cyclic_update.status(), StatusCode::OK);
+
+        let missing = update_dever(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(UpdateDeverBody {
+                title: None,
+                area: None,
+                priority: None,
+                active: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing.status(), StatusCode::NOT_FOUND);
+
+        let db = state.db.lock().unwrap();
+        let updated_once = read_dever_by_id(&db, &once_id).unwrap();
+        assert!(!updated_once.active());
+        assert_eq!(updated_once.priority(), &Priority::Medium);
+
+        let updated_cyclic = read_dever_by_id(&db, &cyclic_id).unwrap();
+        assert_eq!(updated_cyclic.priority(), &Priority::Low);
+    }
+
+    #[tokio::test]
+    async fn mark_unmark_and_archive_cover_once_cyclic_and_not_found() {
+        let state = test_state();
+        {
+            let db = state.db.lock().unwrap();
+            write_dever(&db, &once_dever("once-1", true, Some("2026-04-29")));
+            write_dever(&db, &cyclic_dever("cyclic-1", true));
+        }
+
+        for id in ["once-1", "cyclic-1"] {
+            let mark = mark_dever_done(
+                State(state.clone()),
+                Path(id.to_string()),
+                Json(MarkDeverDoneBody {
+                    occurrence_date: "2026-04-29".to_string(),
+                }),
+            )
+            .await;
+            assert_eq!(mark.status(), StatusCode::OK);
+
+            let duplicate = mark_dever_done(
+                State(state.clone()),
+                Path(id.to_string()),
+                Json(MarkDeverDoneBody {
+                    occurrence_date: "2026-04-29".to_string(),
+                }),
+            )
+            .await;
+            assert_eq!(duplicate.status(), StatusCode::OK);
+
+            {
+                let db = state.db.lock().unwrap();
+                let stored = read_dever_by_id(&db, id).unwrap();
+                let count = stored
+                    .completions()
+                    .iter()
+                    .filter(|completion| completion.occurrence_date == "2026-04-29")
+                    .count();
+                assert_eq!(count, 1);
+            }
+
+            let unmark = unmark_dever_done(
+                State(state.clone()),
+                Path((id.to_string(), "2026-04-29".to_string())),
+            )
+            .await;
+            assert_eq!(unmark.status(), StatusCode::OK);
+
+            let archive = archive_dever(State(state.clone()), Path(id.to_string())).await;
+            assert_eq!(archive.status(), StatusCode::OK);
+
+            let db = state.db.lock().unwrap();
+            assert!(!read_dever_by_id(&db, id).unwrap().active());
+        }
+
+        let missing_mark = mark_dever_done(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(MarkDeverDoneBody {
+                occurrence_date: "2026-04-29".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(missing_mark.status(), StatusCode::NOT_FOUND);
+
+        let missing_unmark = unmark_dever_done(
+            State(state.clone()),
+            Path(("missing".to_string(), "2026-04-29".to_string())),
+        )
+        .await;
+        assert_eq!(missing_unmark.status(), StatusCode::NOT_FOUND);
+
+        let missing_archive =
+            archive_dever(State(state.clone()), Path("missing".to_string())).await;
+        assert_eq!(missing_archive.status(), StatusCode::NOT_FOUND);
+    }
+}

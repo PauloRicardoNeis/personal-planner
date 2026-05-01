@@ -105,6 +105,7 @@ const WEEKDAY_NAMES: WeekdayName[] = [
 
 function weekdayName(date: Date): WeekdayName {
   const name = WEEKDAY_NAMES[date.getDay()];
+  /* v8 ignore next -- Date#getDay is specified to return 0..6 for valid Date instances. */
   if (!name) throw new Error(`Unexpected day index: ${date.getDay()}`);
   return name;
 }

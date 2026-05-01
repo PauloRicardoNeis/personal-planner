@@ -2,151 +2,137 @@
 
 ## Overview
 
-`planner-app` é um monorepo pnpm com três pacotes:
+`planner-app` e um monorepo pnpm com quatro pacotes principais:
 
-| Pacote | Tipo | Propósito |
+| Pacote | Tipo | Proposito |
 |---|---|---|
-| `packages/core` | Library (TS) | Modelos, schemas Zod, contrato DataAdapter, funções puras de domínio |
-| `apps/web` | React App (Vite) | Frontend — consome DataAdapter, nunca sabe qual adapter está ativo |
-| `apps/server-rust` | Axum App (Rust) | Backend — API REST + SQLite persistente |
+| `packages/core` | Library (TS) | Modelos, schemas Zod, contrato `DataAdapter`, funcoes puras de dominio |
+| `apps/web` | React App (Vite) | UI compartilhada; consome `DataAdapter` e nao sabe qual backend esta ativo |
+| `apps/server-rust` | Axum App (Rust) | Backend de produto: API REST + SQLite persistente |
+| `apps/desktop` | Tauri App | Produto canonico: empacota a UI e o sidecar `planner-server` |
 
-## Grafo de dependências
+## Produto Canonico
 
+A versao correta e final do aplicativo e o desktop Tauri gerado por `pnpm build:desktop`.
+
+- O desktop sempre usa `VITE_BACKEND_MODE=rest`.
+- O desktop sempre fala com o sidecar Rust `planner-server`.
+- O sidecar persiste dados em SQLite no diretorio de dados do aplicativo.
+- `LocalStorageAdapter` existe apenas para desenvolvimento rapido, testes de UI e isolamento do frontend no browser.
+
+Nao considere uma feature pronta apenas porque funcionou no `LocalStorageAdapter`; comportamento de produto precisa passar tambem pelo caminho `RestApiAdapter` + `apps/server-rust`.
+
+## Grafo de Dependencias
+
+```text
+apps/desktop  ->  apps/web/dist + planner-server sidecar
+apps/web      ->  packages/core
+apps/server-rust implementa o contrato HTTP equivalente em Rust
+
+apps/web nao importa apps/server-rust diretamente
+packages/core nao depende de browser, React, fetch, localStorage ou SQLite
 ```
-apps/web  ──▶  packages/core
-apps/server-rust  (implementa os mesmos contratos, mas em Rust)
 
-apps/web  ✗  apps/server-rust   (nunca se importam mutuamente)
-```
+## Padrao Adapter
 
-`packages/core` não depende de ninguém além de `zod`.
+O frontend depende apenas de `DataAdapter`:
 
-## O padrão Adapter
-
-O frontend nunca sabe onde os dados estão armazenados. Ele depende apenas de `DataAdapter`:
-
-```
+```text
 UI (hooks, pages, components)
-        │
-        ▼
-  DataAdapter (interface)
-        │
-   ┌────┴────┐
-   │         │
-LocalStorage  RestApi
- Adapter     Adapter
-   │         │
-localStorage  fetch → Express server
+        |
+        v
+DataAdapter (interface)
+        |
+   +----+----+
+   |         |
+LocalStorage RestApi
+Adapter      Adapter
+dev/test     produto desktop
+   |         |
+localStorage fetch -> planner-server -> SQLite
 ```
 
-A seleção do adapter concreto acontece em **um único lugar**: `apps/web/src/adapter.ts`.
+A selecao do adapter concreto acontece em um unico lugar: `apps/web/src/adapter.ts`.
 
 ```typescript
-// apps/web/src/adapter.ts
-const mode = import.meta.env.VITE_BACKEND_MODE ?? 'local';
+const mode = import.meta.env['VITE_BACKEND_MODE'] ?? 'local';
+
 export const adapter: DataAdapter =
   mode === 'rest'
-    ? new RestApiAdapter(import.meta.env.VITE_API_BASE_URL)
+    ? new RestApiAdapter(import.meta.env['VITE_API_BASE_URL'] as string ?? 'http://localhost:3001')
     : new LocalStorageAdapter();
 ```
 
-Para trocar de localStorage para servidor Rust, muda-se apenas `VITE_BACKEND_MODE=rest` + `VITE_API_BASE_URL=http://localhost:3001`. O resto do frontend não muda.
+## Configuracao Por Ambiente
 
-## Backend Rust (apps/server-rust)
+| Ambiente | `VITE_BACKEND_MODE` | `VITE_API_BASE_URL` | Uso |
+|---|---|---|---|
+| Desktop final | `rest` | `http://127.0.0.1:3001` | Produto canonico |
+| Browser dev rapido | `local` | opcional | Harness de desenvolvimento/teste |
+| Browser contra server local | `rest` | `http://127.0.0.1:3001` | Teste de integracao manual |
 
-```
+## Backend Rust
+
+```text
 apps/server-rust/src/
 ├── main.rs          # Axum router, CORS, state setup
 ├── db.rs            # SQLite CRUD (rusqlite, JSON blob storage)
-├── models.rs        # Serde structs + domain functions (streaks, nutrition)
+├── models.rs        # Serde structs + domain functions
 └── routes/
-    ├── mod.rs
-    ├── habits.rs    # GET/POST /habits, PATCH/POST archive
-    ├── deveres.rs   # GET/POST /deveres, PATCH/POST archive/complete
-    ├── today.rs     # GET /today — snapshot com streaks + nutrition
-    ├── foods.rs     # GET/POST /foods, PATCH, POST archive
-    ├── diary.rs     # GET/POST /diary, PATCH, DELETE
-    └── nutrition.rs # GET/PUT /nutrition/profile, GET /nutrition/summary
+    ├── habits.rs
+    ├── deveres.rs
+    ├── today.rs
+    ├── foods.rs
+    ├── diary.rs
+    ├── nutrition.rs
+    ├── games.rs
+    └── projetos.rs
 ```
 
-**Padrões do backend:**
-- `Arc<Mutex<rusqlite::Connection>>` como state compartilhado (Axum)
-- JSON blob storage: cada tabela tem `id TEXT PRIMARY KEY, data TEXT NOT NULL`
-- `serde(tag = "type")` para discriminated unions (DiaryEntry, Dever)
-- `Result<T>` wrapper: `{ ok: true, data: T }` ou `{ ok: false, error: string }`
-- Porta padrão: 3001
+Padroes do backend:
 
-## Fluxo de dados
+- `Arc<Mutex<rusqlite::Connection>>` como state compartilhado.
+- JSON blob storage: cada tabela tem `id TEXT PRIMARY KEY, data TEXT NOT NULL`.
+- `serde(tag = "type")` para discriminated unions.
+- Respostas no formato `{ ok: true, data: T }` ou `{ ok: false, error: string }`.
+- Porta padrao do sidecar: `3001`.
 
-```
-Ação do usuário (ex: check-off hábito)
-        │
-        ▼
-  Hook React (useHabits, useToday...)
-        │  chama adapter.markHabitDone(id, date)
-        ▼
-  DataAdapter.markHabitDone()
-        │
-        ▼
-  LocalStorageAdapter (MVP)
-        │  lê, atualiza, valida com Zod, escreve
-        ▼
-  localStorage['planner_habits']
-        │
-        ▼
-  Retorna Result<Habit>
-        │
-        ▼
-  Hook atualiza estado React
-        │
-        ▼
-  Componente re-renderiza
+## Fluxo De Dados Do Produto
+
+```text
+Acao do usuario no desktop
+        |
+        v
+Hook React (useHabits, useToday...)
+        |
+        v
+RestApiAdapter
+        |
+        v
+planner-server (Rust/Axum)
+        |
+        v
+SQLite
+        |
+        v
+Result<T> volta para a UI
 ```
 
-## Configuração por ambiente
+## Adicionando Um Novo Adapter
 
-| Variável | Padrão | Descrição |
+Adapters alternativos podem existir para teste ou ambientes auxiliares, mas o desktop final continua sendo o alvo de produto.
+
+1. Crie `apps/web/src/adapters/NovoAdapter.ts`.
+2. Implemente a interface `DataAdapter` de `packages/core`.
+3. Adicione a selecao em `apps/web/src/adapter.ts`.
+4. Nunca importe o novo adapter fora de `adapter.ts`.
+
+## Funcoes Puras De Dominio
+
+| Funcao | Modulo | Proposito |
 |---|---|---|
-| `VITE_BACKEND_MODE` | `'local'` | `'local'` ou `'rest'` |
-| `VITE_API_BASE_URL` | — | Base URL do servidor (Phase 2) |
-
-## Adicionando um novo adapter
-
-Para implementar um novo adapter (ex: `IndexedDBAdapter`):
-
-1. Crie `apps/web/src/adapters/IndexedDBAdapter.ts`
-2. Implemente a interface `DataAdapter` de `packages/core`
-3. Adicione a seleção em `apps/web/src/adapter.ts`
-4. Nunca importe o novo adapter fora de `adapter.ts`
-
-## Estrutura de packages/core
-
-```
-packages/core/src/
-├── index.ts               # Barrel export — tudo que o core expõe
-├── models/
-│   ├── shared.ts          # ISODate, ISODateTime, HabitId, DeverId, FoodId, DiaryEntryId, RecurrenceConfig
-│   ├── habit.ts           # Habit interface + HabitSchema Zod
-│   ├── dever.ts           # OnceDever, CyclicDever, DeverBase, DeverInput + schemas
-│   └── nutrition.ts       # Food, DiaryEntry, NutritionProfile, DailyTargets + schemas Zod
-├── contracts/
-│   └── DataAdapter.ts     # DataAdapter interface, Result<T>, TodaySnapshot (com streaks + nutrition)
-└── domain/
-    ├── recurrence.ts      # isOccurrenceOn() — função pura
-    ├── recurrence.test.ts # 11 testes
-    ├── streaks.ts         # computeStreaks() → HabitStreakInfo
-    ├── streaks.test.ts    # 25 testes
-    ├── nutrition.ts       # computePortionNutrients, computeDailyTotals, computeDailyTargets, computePercentages
-    └── nutrition.test.ts  # 28 testes
-```
-
-## Funções puras de domínio
-
-| Função | Módulo | Propósito |
-|---|---|---|
-| `isOccurrenceOn(config, date)` | `domain/recurrence.ts` | Verifica se uma recorrência dispara numa data |
+| `isOccurrenceOn(config, date)` | `domain/recurrence.ts` | Verifica se uma recorrencia dispara numa data |
 | `computeStreaks(completions, today, createdAt)` | `domain/streaks.ts` | Calcula currentStreak, bestStreak, atRisk, rate30d |
-| `computePortionNutrients(per100g, grams)` | `domain/nutrition.ts` | Escala nutrientes por porção |
+| `computeHabitProgress(habit, date)` | `domain/habits.ts` | Calcula progresso ponderado de um habito |
 | `computeDailyTotals(entries, foods)` | `domain/nutrition.ts` | Soma nutrientes de todas as entradas do dia |
-| `computeDailyTargets(profile)` | `domain/nutrition.ts` | Calcula metas diárias por peso/objetivo |
-| `computePercentages(totals, targets)` | `domain/nutrition.ts` | Percentual de consumo vs meta |
+| `computeDailyTargets(profile)` | `domain/nutrition.ts` | Calcula metas diarias por peso/objetivo |

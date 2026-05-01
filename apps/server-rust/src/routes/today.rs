@@ -274,3 +274,191 @@ fn priority_order(p: &Priority) -> u8 {
         Priority::Low => 2,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        db::{
+            write_dever, write_diary_entry, write_food, write_habit, write_nutrition_profile,
+            write_projeto,
+        },
+        models::{DeverCompletion, NutritionProfile, RecurrenceConfig},
+        routes::test_support::{
+            cyclic_dever, food, habit, nutrients, once_dever, projeto, response_json, test_state,
+        },
+    };
+
+    fn diary_food(id: &str, food_id: &str) -> DiaryEntry {
+        DiaryEntry::Food {
+            id: id.to_string(),
+            date: "2026-04-29".to_string(),
+            food_id: food_id.to_string(),
+            grams: 100.0,
+            meal: None,
+            created_at: "2026-04-29T12:00:00.000Z".to_string(),
+        }
+    }
+
+    fn diary_quick(id: &str) -> DiaryEntry {
+        DiaryEntry::Quick {
+            id: id.to_string(),
+            date: "2026-04-29".to_string(),
+            description: "Cafe".to_string(),
+            grams: 100.0,
+            nutrients: nutrients(),
+            meal: None,
+            created_at: "2026-04-29T08:00:00.000Z".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn today_rejects_invalid_dates() {
+        let state = test_state();
+        let response = get_today(
+            State(state.clone()),
+            Query(TodayQuery {
+                date: "29-04-2026".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn today_snapshot_combines_active_habits_deveres_projects_and_nutrition() {
+        let state = test_state();
+        {
+            let db = state.db.lock().unwrap();
+            write_habit(&db, &habit("habit-active", true));
+            write_habit(&db, &habit("habit-inactive", false));
+
+            write_dever(&db, &once_dever("once-overdue", true, Some("2026-04-28")));
+            write_dever(&db, &once_dever("once-future", true, Some("2026-05-01")));
+            write_dever(&db, &once_dever("once-open", true, None));
+
+            let mut completed_once = once_dever("once-completed", true, Some("2026-04-29"));
+            if let Dever::Once { completions, .. } = &mut completed_once {
+                completions.push(DeverCompletion {
+                    occurrence_date: "2026-04-29".to_string(),
+                    completed_at: "2026-04-29T10:00:00.000Z".to_string(),
+                });
+            }
+            write_dever(&db, &completed_once);
+
+            let not_started = Dever::Once {
+                id: "once-not-started".to_string(),
+                title: "Ainda nao".to_string(),
+                area: None,
+                priority: Priority::Low,
+                active: true,
+                created_at: "2026-04-01T00:00:00.000Z".to_string(),
+                inicio: Some("2026-05-01T00:00:00.000Z".to_string()),
+                fim: None,
+                completions: vec![],
+            };
+            write_dever(&db, &not_started);
+
+            write_dever(&db, &cyclic_dever("cyclic-due", true));
+
+            let cyclic_done = Dever::Cyclic {
+                id: "cyclic-done".to_string(),
+                title: "Revisar".to_string(),
+                area: None,
+                priority: Priority::Medium,
+                active: true,
+                created_at: "2026-04-01T00:00:00.000Z".to_string(),
+                inicio: Some("2026-04-01T00:00:00.000Z".to_string()),
+                fim: Some("2026-12-31".to_string()),
+                recurrence: RecurrenceConfig::Weekly {
+                    weekdays: vec!["wednesday".to_string()],
+                },
+                completions: vec![DeverCompletion {
+                    occurrence_date: "2026-04-29".to_string(),
+                    completed_at: "2026-04-29T12:00:00.000Z".to_string(),
+                }],
+            };
+            write_dever(&db, &cyclic_done);
+
+            let cyclic_past = Dever::Cyclic {
+                id: "cyclic-past".to_string(),
+                title: "Passado".to_string(),
+                area: None,
+                priority: Priority::Medium,
+                active: true,
+                created_at: "2026-04-01T00:00:00.000Z".to_string(),
+                inicio: Some("2026-04-01T00:00:00.000Z".to_string()),
+                fim: Some("2026-04-01".to_string()),
+                recurrence: RecurrenceConfig::Daily,
+                completions: vec![],
+            };
+            write_dever(&db, &cyclic_past);
+
+            write_food(&db, &food("food-1", true));
+            write_diary_entry(&db, &diary_food("entry-food", "food-1"));
+            write_diary_entry(&db, &diary_food("entry-missing-food", "missing-food"));
+            write_diary_entry(&db, &diary_quick("entry-quick"));
+            write_nutrition_profile(
+                &db,
+                &NutritionProfile {
+                    weight_kg: 100.0,
+                    goal_type: "maintain".to_string(),
+                    custom_targets: None,
+                },
+            );
+
+            write_projeto(&db, &projeto("projeto-active", ProjetoStatus::Active));
+            write_projeto(&db, &projeto("projeto-paused", ProjetoStatus::Paused));
+        }
+
+        let snapshot = response_json(
+            get_today(
+                State(state.clone()),
+                Query(TodayQuery {
+                    date: "2026-04-29".to_string(),
+                }),
+            )
+            .await,
+        )
+        .await;
+
+        assert_eq!(snapshot["data"]["date"], serde_json::json!("2026-04-29"));
+
+        let habits = snapshot["data"]["habits"].as_array().unwrap();
+        assert_eq!(habits.len(), 1);
+        assert_eq!(habits[0]["habit"]["id"], serde_json::json!("habit-active"));
+        assert_eq!(habits[0]["isDone"], serde_json::json!(true));
+
+        let deveres = snapshot["data"]["deveres"].as_array().unwrap();
+        let ids: Vec<&str> = deveres
+            .iter()
+            .map(|item| item["dever"]["id"].as_str().unwrap())
+            .collect();
+        assert!(ids.contains(&"once-overdue"));
+        assert!(ids.contains(&"once-open"));
+        assert!(ids.contains(&"cyclic-due"));
+        assert!(ids.contains(&"cyclic-done"));
+        assert!(!ids.contains(&"once-future"));
+        assert!(!ids.contains(&"once-completed"));
+        assert!(!ids.contains(&"once-not-started"));
+        assert!(!ids.contains(&"cyclic-past"));
+        assert_eq!(deveres[0]["isOverdue"], serde_json::json!(true));
+        assert!(deveres.iter().any(
+            |item| item["dever"]["id"] == serde_json::json!("cyclic-done")
+                && item["isDone"] == serde_json::json!(true)
+        ));
+
+        let nutrition = &snapshot["data"]["nutritionSummary"];
+        assert_eq!(nutrition["calories"], serde_json::json!(200.0));
+        assert_eq!(nutrition["caloriesTarget"], serde_json::json!(2800.0));
+
+        let projetos = snapshot["data"]["projetos"].as_array().unwrap();
+        assert_eq!(projetos.len(), 1);
+        assert_eq!(
+            projetos[0]["projeto"]["id"],
+            serde_json::json!("projeto-active")
+        );
+        assert_eq!(projetos[0]["progress"]["percent"], serde_json::json!(50));
+        assert_eq!(projetos[0]["nextEtapas"].as_array().unwrap().len(), 1);
+    }
+}

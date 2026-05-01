@@ -19,7 +19,7 @@ Observacao: esta checklist mede existencia/localizacao do teste. A meta de cover
 - [x] `packages/core/src/domain/dever.ts` -> `packages/core/src/domain/dever.test.ts`
 - [x] `packages/core/src/domain/habits.ts` -> `packages/core/src/domain/habits.test.ts`
 - [x] `packages/core/src/domain/nutrition.ts` -> `packages/core/src/domain/nutrition.test.ts`
-- [ ] `packages/core/src/domain/openLibrary.ts` -> `packages/core/src/domain/openLibrary.test.ts`
+- [x] `packages/core/src/domain/openLibrary.ts` -> `packages/core/src/domain/openLibrary.test.ts`
 - [x] `packages/core/src/domain/projeto.ts` -> `packages/core/src/domain/projeto.test.ts`
 - [x] `packages/core/src/domain/recurrence.ts` -> `packages/core/src/domain/recurrence.test.ts`
 - [x] `packages/core/src/domain/saude.ts` -> `packages/core/src/domain/saude.test.ts`
@@ -28,30 +28,30 @@ Observacao: esta checklist mede existencia/localizacao do teste. A meta de cover
 
 ### Models And Schemas
 
-- [ ] `packages/core/src/models/book.ts` -> `packages/core/src/models/book.test.ts`
-- [ ] `packages/core/src/models/compra.ts` -> `packages/core/src/models/compra.test.ts`
-- [ ] `packages/core/src/models/dever.ts` -> `packages/core/src/models/dever.test.ts`
-- [ ] `packages/core/src/models/game.ts` -> `packages/core/src/models/game.test.ts`
-- [ ] `packages/core/src/models/habit.ts` -> `packages/core/src/models/habit.test.ts`
-- [ ] `packages/core/src/models/movie.ts` -> `packages/core/src/models/movie.test.ts`
-- [ ] `packages/core/src/models/nutrition.ts` -> `packages/core/src/models/nutrition.test.ts`
-- [ ] `packages/core/src/models/projeto.ts` -> `packages/core/src/models/projeto.test.ts`
-- [ ] `packages/core/src/models/saude.ts` -> `packages/core/src/models/saude.test.ts`
-- [ ] `packages/core/src/models/shared.ts` -> `packages/core/src/models/shared.test.ts`
+- [x] `packages/core/src/models/book.ts` -> `packages/core/src/models/book.test.ts`
+- [x] `packages/core/src/models/compra.ts` -> `packages/core/src/models/compra.test.ts`
+- [x] `packages/core/src/models/dever.ts` -> `packages/core/src/models/dever.test.ts`
+- [x] `packages/core/src/models/game.ts` -> `packages/core/src/models/game.test.ts`
+- [x] `packages/core/src/models/habit.ts` -> `packages/core/src/models/habit.test.ts`
+- [x] `packages/core/src/models/movie.ts` -> `packages/core/src/models/movie.test.ts`
+- [x] `packages/core/src/models/nutrition.ts` -> `packages/core/src/models/nutrition.test.ts`
+- [x] `packages/core/src/models/projeto.ts` -> `packages/core/src/models/projeto.test.ts`
+- [x] `packages/core/src/models/saude.ts` -> `packages/core/src/models/saude.test.ts`
+- [x] `packages/core/src/models/shared.ts` -> `packages/core/src/models/shared.test.ts`
 
 ### Contracts And Exports
 
 - [ ] `packages/core/src/contracts/DataAdapter.ts` -> `tests/contracts/dataAdapterContractSuite.ts`
-- [ ] `packages/core/src/index.ts` -> `packages/core/src/index.test.ts`
+- [x] `packages/core/src/index.ts` -> `packages/core/src/index.test.ts`
 
 ## Web
 
 ### Composition And Pure Frontend Helpers
 
-- [ ] `apps/web/src/adapter.ts` -> `apps/web/src/adapter.test.ts`
-- [ ] `apps/web/src/App.tsx` -> `apps/web/src/test/pages/App.test.tsx`
-- [ ] `apps/web/src/deverPresentation.ts` -> `apps/web/src/deverPresentation.test.ts`
-- [ ] `apps/web/src/habitCompatibility.ts` -> `apps/web/src/habitCompatibility.test.ts`
+- [x] `apps/web/src/adapter.ts` -> `apps/web/src/adapter.test.ts`
+- [x] `apps/web/src/App.tsx` -> `apps/web/src/test/pages/App.test.tsx`
+- [x] `apps/web/src/deverPresentation.ts` -> `apps/web/src/deverPresentation.test.ts`
+- [x] `apps/web/src/habitCompatibility.ts` -> `apps/web/src/habitCompatibility.test.ts`
 - [ ] `apps/web/src/main.tsx` -> `apps/web/src/test/pages/main.test.tsx`
 
 ### Adapters
@@ -88,7 +88,7 @@ Observacao: esta checklist mede existencia/localizacao do teste. A meta de cover
 - [ ] `apps/web/src/components/calendar/CalendarGrid.tsx` -> `apps/web/src/test/components/calendar/CalendarGrid.test.tsx`
 - [ ] `apps/web/src/components/deveres/DeverCard.tsx` -> `apps/web/src/test/components/deveres/DeverCard.test.tsx`
 - [ ] `apps/web/src/components/deveres/DeverList.tsx` -> `apps/web/src/test/components/deveres/DeverList.test.tsx`
-- [ ] `apps/web/src/components/habits/HabitCard.tsx` -> `apps/web/src/test/components/habits/HabitCard.test.tsx`
+- [x] `apps/web/src/components/habits/HabitCard.tsx` -> `apps/web/src/test/components/habits/HabitCard.test.tsx`
 - [ ] `apps/web/src/components/habits/HabitList.tsx` -> `apps/web/src/test/components/habits/HabitList.test.tsx`
 - [ ] `apps/web/src/components/habits/HabitProgressBar.tsx` -> `apps/web/src/test/components/habits/HabitProgressBar.test.tsx`
 - [ ] `apps/web/src/components/hoje/DashboardCard.tsx` -> `apps/web/src/test/components/hoje/DashboardCard.test.tsx`
@@ -111,7 +111,7 @@ Observacao: esta checklist mede existencia/localizacao do teste. A meta de cover
 - [ ] `apps/web/src/pages/FilmesPage.tsx` -> `apps/web/src/test/pages/FilmesPage.test.tsx`
 - [ ] `apps/web/src/pages/FoodsPage.tsx` -> `apps/web/src/test/pages/FoodsPage.test.tsx`
 - [ ] `apps/web/src/pages/GamesPage.tsx` -> `apps/web/src/test/pages/GamesPage.test.tsx`
-- [ ] `apps/web/src/pages/HabitsPage.tsx` -> `apps/web/src/test/pages/HabitsPage.test.tsx`
+- [x] `apps/web/src/pages/HabitsPage.tsx` -> `apps/web/src/test/pages/HabitsPage.test.tsx`
 - [ ] `apps/web/src/pages/HojePage.tsx` -> `apps/web/src/test/pages/HojePage.test.tsx`
 - [ ] `apps/web/src/pages/NutritionPage.tsx` -> `apps/web/src/test/pages/NutritionPage.test.tsx`
 - [ ] `apps/web/src/pages/ProfilePage.tsx` -> `apps/web/src/test/pages/ProfilePage.test.tsx`
@@ -134,3 +134,18 @@ Observacao: esta checklist mede existencia/localizacao do teste. A meta de cover
 - [ ] `tests/e2e/dever-once-overdue.e2e.ts`
 - [ ] `tests/e2e/dever-cyclic-occurrence.e2e.ts`
 - [ ] `tests/e2e/archive-and-persistence.e2e.ts`
+
+## Rust Server
+
+- [x] `apps/server-rust/src/db.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/main.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/models.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/deveres.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/diary.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/foods.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/games.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/habits.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/mod.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/nutrition.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/projetos.rs` -> co-located `#[cfg(test)]`
+- [x] `apps/server-rust/src/routes/today.rs` -> co-located `#[cfg(test)]`

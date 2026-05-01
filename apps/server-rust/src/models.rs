@@ -961,3 +961,350 @@ pub struct SteamSyncResult {
     #[serde(rename = "resolvedSteamId")]
     pub resolved_steam_id: String,
 }
+
+#[cfg(test)]
+mod domain_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn sample_nutrients() -> NutrientsPer100g {
+        NutrientsPer100g {
+            calories: 200.0,
+            protein: 10.0,
+            carbs: 20.0,
+            fat: 8.0,
+            fiber: 4.0,
+            saturated_fat: Some(3.0),
+            trans_fat: Some(0.2),
+            sugar: Some(6.0),
+            sodium: Some(300.0),
+            potassium: Some(450.0),
+            calcium: Some(120.0),
+            iron: Some(2.0),
+            vitamin_a: Some(90.0),
+            vitamin_c: Some(12.0),
+            vitamin_d: Some(1.5),
+            vitamin_b12: Some(0.4),
+            magnesium: Some(50.0),
+            zinc: Some(1.1),
+            omega3: Some(0.3),
+            cholesterol: Some(30.0),
+        }
+    }
+
+    fn etapa(id: &str, status: EtapaStatus, order: i32, depends_on: Option<Vec<&str>>) -> Etapa {
+        Etapa {
+            id: id.to_string(),
+            title: format!("Etapa {id}"),
+            description: None,
+            status,
+            order,
+            deadline: None,
+            effort_hours: None,
+            depends_on: depends_on
+                .map(|deps| deps.into_iter().map(|dep| dep.to_string()).collect()),
+            completed_at: None,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+        }
+    }
+
+    fn projeto_with_etapas(etapas: Vec<Etapa>) -> Projeto {
+        Projeto {
+            id: "projeto-1".to_string(),
+            title: "Projeto".to_string(),
+            description: None,
+            area: Some("Casa".to_string()),
+            priority: Priority::Medium,
+            status: ProjetoStatus::Active,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+            inicio: None,
+            fim: None,
+            etapas,
+        }
+    }
+
+    fn assert_close(actual: f64, expected: f64) {
+        assert!(
+            (actual - expected).abs() < 1e-9,
+            "expected {actual} to be close to {expected}"
+        );
+    }
+
+    #[test]
+    fn dever_helpers_cover_once_cyclic_and_legacy_deadline() {
+        let once: Dever = serde_json::from_value(json!({
+            "type": "once",
+            "id": "once-1",
+            "title": "Pagar conta",
+            "area": "Casa",
+            "priority": "high",
+            "active": true,
+            "createdAt": "2026-04-01T00:00:00.000Z",
+            "deadline": "2026-04-10",
+            "completions": [
+                {
+                    "occurrenceDate": "2026-04-10",
+                    "completedAt": "2026-04-09T20:00:00.000Z"
+                }
+            ]
+        }))
+        .unwrap();
+
+        assert_eq!(once.id(), "once-1");
+        assert!(once.active());
+        assert_eq!(once.priority(), &Priority::High);
+        assert_eq!(once.inicio_or_created(), "2026-04-01T00:00:00.000Z");
+        assert_eq!(once.completions().len(), 1);
+        assert_eq!(
+            serde_json::to_value(&once).unwrap()["fim"],
+            json!("2026-04-10")
+        );
+
+        let cyclic = Dever::Cyclic {
+            id: "cyclic-1".to_string(),
+            title: "Revisar".to_string(),
+            area: None,
+            priority: Priority::Low,
+            active: false,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+            inicio: Some("2026-04-05T00:00:00.000Z".to_string()),
+            fim: Some("2026-05-01".to_string()),
+            recurrence: RecurrenceConfig::Weekly {
+                weekdays: vec!["wednesday".to_string()],
+            },
+            completions: vec![],
+        };
+
+        assert_eq!(cyclic.id(), "cyclic-1");
+        assert!(!cyclic.active());
+        assert_eq!(cyclic.priority(), &Priority::Low);
+        assert_eq!(cyclic.inicio_or_created(), "2026-04-05T00:00:00.000Z");
+        assert!(cyclic.completions().is_empty());
+    }
+
+    #[test]
+    fn recurrence_matches_daily_weekly_monthly_and_rejects_bad_dates() {
+        assert!(is_occurrence_on(&RecurrenceConfig::Daily, "2026-04-29"));
+        assert!(!is_occurrence_on(&RecurrenceConfig::Daily, "not-a-date"));
+
+        let weekly = RecurrenceConfig::Weekly {
+            weekdays: vec!["wednesday".to_string(), "friday".to_string()],
+        };
+        assert!(is_occurrence_on(&weekly, "2026-04-29"));
+        assert!(!is_occurrence_on(&weekly, "2026-04-30"));
+
+        let monthly = RecurrenceConfig::Monthly {
+            month_day: 29,
+            month_day_end: Some(31),
+        };
+        assert!(is_occurrence_on(&monthly, "2026-04-29"));
+        assert!(!is_occurrence_on(&monthly, "2026-04-28"));
+    }
+
+    #[test]
+    fn compute_streaks_counts_current_at_risk_best_and_rate() {
+        let completions = HashMap::from([
+            ("2026-04-08".to_string(), true),
+            ("2026-04-09".to_string(), true),
+            ("2026-04-10".to_string(), true),
+            ("2026-04-12".to_string(), true),
+            ("bad-date".to_string(), true),
+            ("2026-04-07".to_string(), false),
+        ]);
+
+        let current = compute_streaks(&completions, "2026-04-10", "2026-04-01T00:00:00.000Z");
+        assert_eq!(current.current_streak, 3);
+        assert_eq!(current.best_streak, 3);
+        assert!(!current.at_risk);
+        assert_eq!(current.rate_30d, 33);
+
+        let at_risk = compute_streaks(&completions, "2026-04-11", "2026-04-01T00:00:00.000Z");
+        assert_eq!(at_risk.current_streak, 3);
+        assert_eq!(at_risk.best_streak, 3);
+        assert!(at_risk.at_risk);
+        assert_eq!(at_risk.rate_30d, 30);
+
+        let invalid = compute_streaks(&completions, "bad-date", "bad-created-at");
+        assert_eq!(invalid.current_streak, 0);
+        assert_eq!(invalid.best_streak, 0);
+        assert!(!invalid.at_risk);
+        assert_eq!(invalid.rate_30d, 0);
+    }
+
+    #[test]
+    fn projeto_progress_and_next_steps_respect_completion_and_dependencies() {
+        let projeto = projeto_with_etapas(vec![
+            etapa("done", EtapaStatus::Done, 2, None),
+            etapa("blocked", EtapaStatus::Pending, 0, Some(vec!["missing"])),
+            etapa("ready", EtapaStatus::Pending, 3, Some(vec!["done"])),
+            etapa("active", EtapaStatus::InProgress, 1, None),
+        ]);
+
+        let progress = compute_projeto_progress(&projeto);
+        assert_eq!(progress.completed, 1);
+        assert_eq!(progress.total, 4);
+        assert_eq!(progress.percent, 25);
+
+        let next_ids: Vec<&str> = get_next_etapas(&projeto)
+            .into_iter()
+            .map(|etapa| etapa.id.as_str())
+            .collect();
+        assert_eq!(next_ids, vec!["active", "ready"]);
+
+        let empty = projeto_with_etapas(vec![]);
+        let empty_progress = compute_projeto_progress(&empty);
+        assert_eq!(empty_progress.completed, 0);
+        assert_eq!(empty_progress.total, 0);
+        assert_eq!(empty_progress.percent, 0);
+        assert!(get_next_etapas(&empty).is_empty());
+    }
+
+    #[test]
+    fn nutrition_computes_portions_targets_overrides_and_sums() {
+        let nutrients = sample_nutrients();
+        let portion = compute_portion_nutrients(&nutrients, 50.0);
+        assert_close(portion.calories, 100.0);
+        assert_close(portion.protein, 5.0);
+        assert_eq!(portion.saturated_fat, Some(1.5));
+        assert_eq!(portion.cholesterol, Some(15.0));
+
+        let maintain = compute_daily_targets(&NutritionProfile {
+            weight_kg: 100.0,
+            goal_type: "maintain".to_string(),
+            custom_targets: None,
+        });
+        assert_close(maintain.calories, 2800.0);
+        assert_close(maintain.protein, 180.0);
+        assert_close(maintain.fat, 100.0);
+        assert_close(maintain.carbs, 295.0);
+
+        let cut = compute_daily_targets(&NutritionProfile {
+            weight_kg: 100.0,
+            goal_type: "cut".to_string(),
+            custom_targets: None,
+        });
+        assert_close(cut.calories, 2200.0);
+        assert_close(cut.protein, 220.0);
+        assert_close(cut.fiber, 25.0);
+
+        let bulk = compute_daily_targets(&NutritionProfile {
+            weight_kg: 100.0,
+            goal_type: "bulk".to_string(),
+            custom_targets: None,
+        });
+        assert_close(bulk.calories, 3400.0);
+        assert_close(bulk.fat, 120.0);
+
+        let custom = compute_daily_targets(&NutritionProfile {
+            weight_kg: 80.0,
+            goal_type: "custom".to_string(),
+            custom_targets: Some(json!({
+                "calories": 1234.0,
+                "protein": 111.0,
+                "carbs": 222.0,
+                "fat": 33.0,
+                "fiber": 44.0,
+                "saturatedFat": 5.0,
+                "sugar": 6.0,
+                "sodium": 7.0,
+                "potassium": 8.0,
+                "calcium": 9.0,
+                "iron": 10.0,
+                "vitaminA": 11.0,
+                "vitaminC": 12.0,
+                "vitaminD": 13.0,
+                "vitaminB12": 14.0,
+                "magnesium": 15.0,
+                "zinc": 16.0,
+                "omega3": 17.0,
+                "cholesterol": 18.0
+            })),
+        });
+        assert_close(custom.calories, 1234.0);
+        assert_close(custom.fiber, 44.0);
+        assert_eq!(custom.vitamin_b12, Some(14.0));
+        assert_eq!(custom.cholesterol, Some(18.0));
+
+        let zero = zero_targets();
+        let none_plus_some = add_targets(&zero, &portion);
+        assert_close(none_plus_some.calories, 100.0);
+        assert_eq!(none_plus_some.sodium, Some(150.0));
+
+        let some_plus_none = add_targets(&portion, &zero);
+        assert_eq!(some_plus_none.sugar, Some(3.0));
+
+        let some_plus_some = add_targets(&portion, &portion);
+        assert_close(some_plus_some.calories, 200.0);
+        assert_eq!(some_plus_some.cholesterol, Some(30.0));
+
+        let none_plus_none = add_targets(&zero, &zero);
+        assert_close(none_plus_none.calories, 0.0);
+        assert_eq!(none_plus_none.saturated_fat, None);
+    }
+
+    #[test]
+    fn diary_game_and_steam_models_use_frontend_json_contract() {
+        let food_entry = DiaryEntry::Food {
+            id: "entry-food".to_string(),
+            date: "2026-04-29".to_string(),
+            food_id: "food-1".to_string(),
+            grams: 120.0,
+            meal: Some("lunch".to_string()),
+            created_at: "2026-04-29T12:00:00.000Z".to_string(),
+        };
+        let quick_entry = DiaryEntry::Quick {
+            id: "entry-quick".to_string(),
+            date: "2026-04-30".to_string(),
+            description: "Snack".to_string(),
+            grams: 80.0,
+            nutrients: sample_nutrients(),
+            meal: None,
+            created_at: "2026-04-30T12:00:00.000Z".to_string(),
+        };
+
+        assert_eq!(food_entry.id(), "entry-food");
+        assert_eq!(food_entry.date(), "2026-04-29");
+        assert_eq!(quick_entry.id(), "entry-quick");
+        assert_eq!(quick_entry.date(), "2026-04-30");
+        assert_eq!(
+            serde_json::to_value(&food_entry).unwrap()["foodId"],
+            json!("food-1")
+        );
+
+        let game = Game {
+            id: "steam:10".to_string(),
+            source: "steam".to_string(),
+            steam_app_id: 10,
+            name: "Counter-Strike".to_string(),
+            playtime_minutes: 120,
+            icon_hash: Some("icon".to_string()),
+            logo_hash: None,
+            last_imported_at: "2026-04-29T00:00:00.000Z".to_string(),
+        };
+        let game_json = serde_json::to_value(&game).unwrap();
+        assert_eq!(game_json["steamAppId"], json!(10));
+        assert_eq!(game_json["playtimeMinutes"], json!(120));
+        assert_eq!(game_json["iconHash"], json!("icon"));
+        assert!(game_json.get("logoHash").is_none());
+
+        let settings: SteamLibrarySettings = serde_json::from_value(json!({
+            "apiKey": "key",
+            "profile": "profile",
+            "resolvedSteamId": "765",
+            "lastSyncedAt": "2026-04-29T00:00:00.000Z"
+        }))
+        .unwrap();
+        assert_eq!(settings.api_key, "key");
+        assert_eq!(settings.resolved_steam_id.as_deref(), Some("765"));
+
+        let result = SteamSyncResult {
+            games: vec![game],
+            imported_count: 1,
+            synced_at: "2026-04-29T00:00:00.000Z".to_string(),
+            resolved_steam_id: "765".to_string(),
+        };
+        let result_json = serde_json::to_value(&result).unwrap();
+        assert_eq!(result_json["importedCount"], json!(1));
+        assert_eq!(result_json["resolvedSteamId"], json!("765"));
+    }
+}

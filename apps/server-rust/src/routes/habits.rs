@@ -169,7 +169,9 @@ pub async fn archive_habit(State(state): State<AppState>, Path(id): Path<String>
 mod tests {
     use super::*;
     use crate::db::{init, read_all_habits, read_habit_by_id, write_habit};
+    use crate::routes::test_support::response_json;
     use rusqlite::Connection;
+    use serde_json::json;
     use std::sync::{Arc, Mutex};
 
     fn test_state() -> AppState {
@@ -181,19 +183,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_habit_persists_weighted_settings_above_one() {
+    async fn create_habit_accepts_camel_case_weighted_settings_from_json() {
         let state = test_state();
+        let body: CreateHabitBody = serde_json::from_value(json!({
+            "title": "Escovar os dentes",
+            "timesPerDay": 3,
+            "valueWeights": [5.0, 2.0, 1.0]
+        }))
+        .unwrap();
 
-        let _ = create_habit(
-            State(state.clone()),
-            Json(CreateHabitBody {
-                title: "Escovar os dentes".to_string(),
-                category: None,
-                times_per_day: Some(3),
-                value_weights: Some(vec![5.0, 2.0, 1.0]),
-            }),
-        )
-        .await;
+        let _ = create_habit(State(state.clone()), Json(body)).await;
 
         let db = state.db.lock().unwrap();
         let habits = read_all_habits(&db);
@@ -203,7 +202,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn update_habit_persists_weighted_settings_above_one() {
+    async fn update_habit_accepts_camel_case_weighted_settings_from_json() {
         let state = test_state();
         let habit = Habit {
             id: "habit-1".to_string(),
@@ -221,16 +220,16 @@ mod tests {
             write_habit(&db, &habit);
         }
 
+        let body: UpdateHabitBody = serde_json::from_value(json!({
+            "timesPerDay": 4,
+            "valueWeights": [2.0]
+        }))
+        .unwrap();
+
         let _ = update_habit(
             State(state.clone()),
             Path("habit-1".to_string()),
-            Json(UpdateHabitBody {
-                title: None,
-                category: None,
-                active: None,
-                times_per_day: Some(4),
-                value_weights: Some(vec![2.0]),
-            }),
+            Json(body),
         )
         .await;
 
@@ -279,5 +278,107 @@ mod tests {
         let db = state.db.lock().unwrap();
         let updated = read_habit_by_id(&db, "habit-1").unwrap();
         assert_eq!(updated.completions.get("2026-04-28"), Some(&2));
+    }
+
+    #[tokio::test]
+    async fn habit_handlers_cover_validation_listing_updates_archive_and_missing_ids() {
+        let state = test_state();
+
+        let invalid = create_habit(
+            State(state.clone()),
+            Json(CreateHabitBody {
+                title: "  ".to_string(),
+                category: None,
+                times_per_day: None,
+                value_weights: None,
+            }),
+        )
+        .await;
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        let habit = Habit {
+            id: "habit-1".to_string(),
+            title: "Anki".to_string(),
+            category: Some("Estudo".to_string()),
+            active: true,
+            created_at: "2026-04-01T00:00:00.000Z".to_string(),
+            times_per_day: 1,
+            value_weights: vec![1.0],
+            completions: HashMap::new(),
+        };
+        {
+            let db = state.db.lock().unwrap();
+            write_habit(&db, &habit);
+        }
+
+        let list = response_json(get_habits(State(state.clone())).await).await;
+        assert_eq!(list["data"].as_array().unwrap().len(), 1);
+
+        let updated = update_habit(
+            State(state.clone()),
+            Path("habit-1".to_string()),
+            Json(UpdateHabitBody {
+                title: Some("Anki editado".to_string()),
+                category: Some(" ".to_string()),
+                active: Some(false),
+                times_per_day: None,
+                value_weights: None,
+            }),
+        )
+        .await;
+        assert_eq!(updated.status(), StatusCode::OK);
+
+        {
+            let db = state.db.lock().unwrap();
+            let stored = read_habit_by_id(&db, "habit-1").unwrap();
+            assert_eq!(stored.title, "Anki editado");
+            assert_eq!(stored.category, None);
+            assert!(!stored.active);
+        }
+
+        let missing_update = update_habit(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(UpdateHabitBody {
+                title: None,
+                category: None,
+                active: None,
+                times_per_day: None,
+                value_weights: None,
+            }),
+        )
+        .await;
+        assert_eq!(missing_update.status(), StatusCode::NOT_FOUND);
+
+        let missing_mark = mark_habit_done(
+            State(state.clone()),
+            Path("missing".to_string()),
+            Json(MarkDoneBody {
+                date: "2026-04-29".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(missing_mark.status(), StatusCode::NOT_FOUND);
+
+        let unmark_absent_date = unmark_habit_done(
+            State(state.clone()),
+            Path(("habit-1".to_string(), "2026-04-29".to_string())),
+        )
+        .await;
+        assert_eq!(unmark_absent_date.status(), StatusCode::OK);
+
+        let missing_unmark = unmark_habit_done(
+            State(state.clone()),
+            Path(("missing".to_string(), "2026-04-29".to_string())),
+        )
+        .await;
+        assert_eq!(missing_unmark.status(), StatusCode::NOT_FOUND);
+
+        let archive = archive_habit(State(state.clone()), Path("habit-1".to_string())).await;
+        assert_eq!(archive.status(), StatusCode::OK);
+
+        let missing_archive =
+            archive_habit(State(state.clone()), Path("missing".to_string())).await;
+        assert_eq!(missing_archive.status(), StatusCode::NOT_FOUND);
     }
 }

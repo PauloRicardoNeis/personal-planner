@@ -22,6 +22,15 @@ describe('parseSteamProfile', () => {
       vanity: 'gaben',
     });
   });
+
+  it('returns null for blank profiles and normalizes plain vanity values', () => {
+    expect(parseSteamProfile('   ')).toBeNull();
+    expect(parseSteamProfile('@gaben')).toEqual({ kind: 'vanity', vanity: 'gaben' });
+    expect(parseSteamProfile('https://example.com/id/gaben')).toEqual({
+      kind: 'vanity',
+      vanity: 'https://example.com/id/gaben',
+    });
+  });
 });
 
 describe('normalizeSteamOwnedGamesResponse', () => {
@@ -54,5 +63,47 @@ describe('normalizeSteamOwnedGamesResponse', () => {
       steamAppId: 20,
       iconHash: 'icon-b',
     });
+  });
+
+  it('defaults missing playtime and games arrays', () => {
+    const empty = normalizeSteamOwnedGamesResponse(
+      { response: {} },
+      '2026-04-06T12:00:00.000Z' as never,
+      '76561198000000000',
+    );
+
+    expect(empty).toMatchObject({
+      games: [],
+      importedCount: 0,
+      resolvedSteamId: '76561198000000000',
+    });
+
+    const withDefaultPlaytime = normalizeSteamOwnedGamesResponse(
+      { response: { games: [{ appid: 1, name: 'Zero Playtime' }] } },
+      '2026-04-06T12:00:00.000Z' as never,
+      '76561198000000000',
+    );
+
+    expect(withDefaultPlaytime.games[0]).toMatchObject({
+      name: 'Zero Playtime',
+      playtimeMinutes: 0,
+    });
+  });
+
+  it('sorts games alphabetically when playtime ties', () => {
+    const result = normalizeSteamOwnedGamesResponse(
+      {
+        response: {
+          games: [
+            { appid: 2, name: 'Beta', playtime_forever: 60 },
+            { appid: 1, name: 'Alpha', playtime_forever: 60 },
+          ],
+        },
+      },
+      '2026-04-06T12:00:00.000Z' as never,
+      '76561198000000000',
+    );
+
+    expect(result.games.map((game) => game.name)).toEqual(['Alpha', 'Beta']);
   });
 });
